@@ -19,13 +19,11 @@ dsc.check_data(data, files, params) #veryfies that all input values are correct.
 plot.plot_raw_data(files, data, params) #plots the raw data. 
 refs = dsc.average_refs(data, files) #averages the reference measurements. If the size of the reference measurements does not fit, only the longest one is considered. 
 #refs is a dictionary containing the reference measurements.
-data_c = dsc.correction(data, refs, files, params)
 
 #TODO data_c, corrects the data for the empty cell and the buffer-buffer titration.  
+#data_c = dsc.correction(data, refs, files, params)
 
-#if files[]:  #verify if emptyu cell and buffer buffer titration were provided. 
-    #data_c = dsc.heatflow_correction(data, refs, files, params)
-#else
+
 data_norm = dsc.normalize_sampleruns(files, data, params)
 data_final = dsc.baseline(data_norm, params, files)
 
