@@ -3,7 +3,9 @@
 Two sets of script dedicated to the reduction of the thermograms from differential scanning calorimetry on simple solutions. 
 First version by Aline Cisse
 Second version by Leonardo Chiappisi (December 2018)
-Edit 2019.02.05:  corrected bug in dsc.plot (wrong value for enthalpy displayed) and reads Mw from input file. 
+Edit 2019.02.05: corrected bug in dsc.plot (wrong value for enthalpy displayed) and reads Mw from input file. 
+Edit 2019.02.19: dsc.correction function was added. 
+Edit 2019.05.02: correction of small bugs in the dsc.correction function and addition of the plot_baseline_data function. 
 """
 
 
@@ -19,15 +21,12 @@ dsc.check_data(data, files, params) #veryfies that all input values are correct.
 plot.plot_raw_data(files, data, params) #plots the raw data. 
 refs = dsc.average_refs(data, files) #averages the reference measurements. If the size of the reference measurements does not fit, only the longest one is considered. 
 #refs is a dictionary containing the reference measurements.
+data_c = dsc.correction(data, refs, files, params)
+plot.plot_corrected_data(files, data_c, params) #plots the raw data corrected for empty cell and buffer, if reference files are provided. 
 
-#TODO data_c, corrects the data for the empty cell and the buffer-buffer titration.  
-#data_c = dsc.correction(data, refs, files, params)
-
-
-data_norm = dsc.normalize_sampleruns(files, data, params)
-data_final = dsc.baseline(data_norm, params, files)
-
-
+data_norm = dsc.normalize_sampleruns(files, data_c, params)
+data_final = dsc.baseline(data_norm, params, files) 
+plot.plot_baseline_data(files, data_final, params)
 plot.plot_final_data(files, data_final, params)
 dsc.export_final_data(files, data_final, params)
 

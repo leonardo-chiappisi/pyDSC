@@ -106,7 +106,7 @@ def read_params():
             for key in params:
                 if line.split(':')[0] == key:
                     value = line.split(':')[1].replace('\n','').replace('\t','').replace(' ','').split(',')
-                    print(value[0])
+                    #print(value[0])
                     if value[0]:
                         params[key] = value  #takes the line with ROI and creates a list with the region of interest. 
                         s = 'Input parameter {} read correctly as {}'.format(key, params[key])
@@ -279,6 +279,12 @@ and is not consistent with the one provided in the input parameter file of {:.2g
         else:
             raise Exception('Cooling run lengths differ by more than 5% to be threated at the same time. Evaluate if analysing them separately.') 
 
+#Checks that the peak is defined within the region of interest
+    if params['ROP_h'][0] <  params['ROI_h'][0] or params['ROP_h'][1] >  params['ROI_h'][1]:
+        raise Exception('Peak in heating run falls out of region of interest. Verify the regions of interest and the region of peak.')
+    if params['ROP_c'][0] <  params['ROI_c'][0] or params['ROP_c'][1] >  params['ROI_c'][1]:
+        raise Exception('Peak in cooling run falls out of region of interest. Verify the regions of interest and the region of peak.')
+            
 
     if W_counter == 0 and D_counter == 0:
         print('Check performed sucessfully. No errors encountered!')    
@@ -346,43 +352,83 @@ def average_refs(data, files):
     return refs
 
 
-#def correction(data, refs, files, params):
-#    ''' Function which corrects the sample runs for the empty cells and the buffer buffer titrations. 
-#    If no reference files are provided, this function will simple return the sample raw data.'''
-#    print(15*'*', 'Sample data correction', 15*'*')  
-#    data_c = {}
-#
-#    if np.shape(refs['EC_cooling'])[0]:
-#        if np.shape(refs['B_cooling'])[0]:
-#            print('Correcting the Buffer cooling run for the Empty cell cooling run')
-#            tck = interpolate.interp1d(refs['EC_cooling'][1,:], refs['EC_cooling'][2,:], fill_value='extrapolate')
-#            EC_interpol = tck(refs['B_cooling'][:,1])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.   
-#            Buffer_corrected = np.array(refs['B_cooling'][0,:], refs['B_cooling'][1,:], refs['B_cooling'][2,:]-EC_interpol)
-#            for i in files['S_cooling']:
-#                print('Correcting file {} for EC and Buffer measurement').format(i)
-#                data_c[i] = np.array()
-#
-#    if np.shape(refs['EC_cooling'])[0]:
-#        print('EC_cooling')
-#    if np.shape(refs['B_cooling'])[0]:
-#        print('B_cooling')
-#
-#    return None
+def correction(data, refs, files, params):
+    ''' Function which corrects the sample runs for the empty cells and the buffer buffer titrations. 
+    If no reference files are provided, this function will simple return the sample raw data.'''
+    print(15*'*', 'Sample data correction', 15*'*')  
+    data_c = {}
 
+    if np.shape(refs['EC_cooling'])[0]:
+        tck_EC = interpolate.interp1d(refs['EC_cooling'][1,:], refs['EC_cooling'][2,:], fill_value='extrapolate')
+        if np.shape(refs['B_cooling'])[0]:
+            print('Correcting the Buffer cooling run for the Empty cell cooling run')
+            EC_interpol = tck_EC(refs['B_cooling'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
+            Buffer_corrected = np.array((refs['B_cooling'][0,:], refs['B_cooling'][1,:], refs['B_cooling'][2,:]-EC_interpol))
+            tck_B = interpolate.interp1d(Buffer_corrected[1,:], Buffer_corrected[2,:], fill_value='extrapolate')
+            for i in files['S_cooling']:
+                print('Correcting file {} for EC and Buffer measurement'.format(i))
+                B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run. 
+                EC_interpol = tck_EC(data[i][1,:])  #linear interpolation of the heatflow of the EC as a function of the temperature of the sample run. 
+                sf_c = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0])  #scaling factor used for correcting cooling sample run. 
+                data_corrected = data[i][2,:] - EC_interpol - B_interpol * sf_c  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
+                data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
+        else:  #if empty cell was measured but not the buffer/buffer. 
+            for i in files['S_cooling']:
+                   print('Correcting file {} for EC measurement'.format(i))
+                   EC_interpol = tck_EC(data[i][1,:])
+                   data_corrected = data[i][2,:] - EC_interpol #corrects the sample data for the empty cell measurement. 
+                   data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
+    else: #if the empty cell was not measured
+        if np.shape(refs['B_cooling'])[0]: #if buffer was measured
+            tck_B = interpolate.interp1d(refs['B_cooling'][1,:], refs['B_cooling'][2,:], fill_value='extrapolate')
+            for i in files['S_cooling']:
+                print('Correcting file {} for Buffer measurement'.format(i))
+                B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run.       
+                sf_c = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0])
+                data_corrected = data[i][2,:] - B_interpol * sf_c  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
+                data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
+        else: #if no empty cell nor buffer were measured. 
+            for i in files['S_cooling']:
+                print('File {} was not corrected for buffer or emty cell measurement'.format(i))
+                data_c[i] = np.array([data[i][0,:], data[i][1,:], data[i][2,:], data[i][3,:], data[i][4,:]])
+                
+    
+    if np.shape(refs['EC_heating'])[0]:
+        tck_EC = interpolate.interp1d(refs['EC_heating'][1,:], refs['EC_heating'][2,:], fill_value='extrapolate')
+        if np.shape(refs['B_heating'])[0]:
+            print('Correcting the Buffer heating run for the Empty cell heating run')
+            EC_interpol = tck_EC(refs['B_heating'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
+            Buffer_corrected = np.array((refs['B_heating'][0,:], refs['B_heating'][1,:], refs['B_heating'][2,:]-EC_interpol))
+            print('Buffer heating run was corrected for the Empty cell heating run')
+            tck_B = interpolate.interp1d(Buffer_corrected[1,:], Buffer_corrected[2,:], fill_value='extrapolate')
+            for i in files['S_heating']:
+                print('Correcting file {} for EC and Buffer measurement'.format(i))
+                B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run. 
+                EC_interpol = tck_EC(data[i][1,:])  #linear interpolation of the heatflow of the EC as a function of the temperature of the sample run. 
+                sf_h = (float(params['mass_s'][0])*(1-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0]) #scaling factor used for correcting heating sample run. 
+                data_corrected = data[i][2,:] - EC_interpol - B_interpol *sf_h  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
+                data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
+        else:  #if empty cell was measured but not the buffer/buffer. 
+            for i in files['S_heating']:
+                   print('Correcting file {} for EC measurement'.format(i))
+                   EC_interpol = tck_EC(data[i][1,:])
+                   data_corrected = data[i][2,:] - EC_interpol #corrects the sample data for the empty cell measurement. 
+                   data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
+    else: #if the empty cell was not measured
+        if np.shape(refs['B_heating'])[0]: #if buffer was measured
+            tck_B = interpolate.interp1d(refs['B_heating'][1,:], refs['B_heating'][2,:], fill_value='extrapolate')
+            for i in files['S_heating']:
+                print('Correcting file {} for Buffer measurement'.format(i))
+                B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run.       
+                sf_h = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0]) #scaling factor used for correcting heating sample run. 
+                data_corrected = data[i][2,:] - B_interpol * sf_h  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
+                data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
+        else: #if no empty cell nor buffer were measured. 
+            for i in files['S_heating']:
+                print('File {} was not corrected for buffer or emty cell measurement'.format(i))
+                data_c[i] = np.array([data[i][0,:], data[i][1,:], data[i][2,:], data[i][3,:], data[i][4,:]])      
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return data_c
 
 
 
@@ -397,18 +443,18 @@ def normalize_sampleruns(files, data, params):
     for i in files['S_heating']:
         hr = np.average(data[i][4,:])
         if 'Mw' in params:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2g} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm))
         else:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2g} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm))
         #print(i, np.average(data[i][4,:])*60)
         data_norm[i] = np.column_stack((data[i][1,:], data[i][2,:]/(hr*sample_norm)))
     
     for i in files['S_cooling']:
         hr = -np.average(data[i][4,:])
         if 'Mw' in params:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2g} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm))
         else:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2g} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm))
         #print(i, np.average(data[i][4,:])*60)
         data_norm[i] = np.column_stack((data[i][1,:], data[i][2,:]/(hr*sample_norm)))
     return data_norm
@@ -460,11 +506,6 @@ def baseline(data_norm, params, files):
         j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
         data_baseline[i] = j
         
-#        plt.figure()
-#        plt.plot(data_norm[i][:,0], data_norm[i][:,1])
-#        plt.plot(data_norm[i][:,0], base1)
-#        plt.plot(data_norm[i][:,0], newbase)
-#        plt.show()
 
     for i in files['S_cooling']:
         #liner fit of the regions before (pre) and after (post) the peak is performed. 
@@ -501,17 +542,11 @@ def baseline(data_norm, params, files):
         else:
             print('Iteration number {}, enthalpy variation of {:.3g} J/g, final value of DH is {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1]/1e3))
         
-#        plt.figure()
-#        plt.plot(data_norm[i][:,0], data_norm[i][:,1])
-#        plt.plot(data_norm[i][:,0], base1)
-#        plt.plot(data_norm[i][:,0], newbase)
-#        plt.plot(data_norm[i][:,0], pre_i + data_norm[i][:,0]*pre_s)
-#        plt.plot(data_norm[i][:,0], post_i + data_norm[i][:,0]*post_s)
-#        plt.show()
         
         j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
         data_baseline[i] = j       
         
+    
     return data_baseline
 
 def export_final_data(files, data, params):
