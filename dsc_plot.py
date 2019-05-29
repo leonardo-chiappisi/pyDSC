@@ -164,7 +164,8 @@ def plot_baseline_data(files, data, params):
             ax.axvspan(float(params['ROI_h'][0]), float(params['ROP_h'][0]), facecolor='#a9a9a9', alpha=0.5)
             ax.axvspan(float(params['ROI_h'][1]), float(params['ROP_h'][1]), facecolor='#a9a9a9', alpha=0.5)
         if file in files['S_cooling']:
-            print('no')
+            ax.axvspan(float(params['ROI_c'][0]), float(params['ROP_c'][0]), facecolor='#a9a9a9', alpha=0.5)
+            ax.axvspan(float(params['ROI_c'][1]), float(params['ROP_c'][1]), facecolor='#a9a9a9', alpha=0.5)
         #ax.axvspan(58.0, 60.0, facecolor='g', alpha=0.5)
 
     

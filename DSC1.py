@@ -151,6 +151,11 @@ def extract_data(files, params, *args, **kwargs):
                             line = inp.readline()
                             hl += 1
                     tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(1,2,3)) #imports all data stored in files
+                    
+                elif params['Dataformat'][0] == '3cols':
+                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
+                        hl = 1 #length of the header of the file to be read. 
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2)) #imports all data stored in files
                 
                 if 'heating' in key:
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
@@ -482,16 +487,18 @@ def baseline(data_norm, params, files):
         #Standard deviation in the region before and after the peak, used to limit the loops for optimizing the baseline. 
         B_pre = data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0],:1]*pre_s + pre_i
         B_post = data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0],:1]*post_s + post_i
-        Hst = np.std(data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0],:1] - B_pre)
-        Hst += np.std(data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0],:1] - B_post)
-        
+         ### Evaluation of uncertainty in the DH ###
+        Hst1 = data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0]][:,1] - B_pre[:,0] #standard deviation before peak region
+        Hst2 = data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0]][:,1] - B_post[:,0] #standard deviation after peak region
+        Hst = np.std(np.append(Hst1, Hst2)) #standard deviation of Cp calculated in baseline regions. 
+        Ns = len(data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0],:1])  +  len(data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0],:1]) #number of points in the two regions
+        delta = np.average(np.diff(data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0]][:,0]))
+        errH = Hst*delta/2*np.sqrt(2.*(len(data_norm[i][:,0])-Ns))
+#        print('Error is', errH)
         DH = H[-1] #variation in area between sucessive loops. The first value is set to the total area. 
         itermax = 0
         newbase = base1
-        if 'Mw' in params:
-            s = '\nBaseline substraction for file {}: precision limit of {:.3g} J/mol set by data noise'.format(i, abs(Hst/H[-1]))
-        else: 
-            s = '\nBaseline substraction for file {}: precision limit of {:.3g} J/g set by data noise'.format(i, abs(Hst/H[-1]))
+        s = '\nBaseline substraction for file {}'.format(i)
         print(s)
         while itermax < 100:
             itermax += 1
@@ -500,9 +507,9 @@ def baseline(data_norm, params, files):
             DH = H[-1] - newH[-1]
             H = newH
         if 'Mw' in params:
-            print('Iteration number {}, enthalpy variation of {:3g} J/mol, final value of DH is {:2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1]))
+            print('Iteration number {}, enthalpy variation of {:3g} J/mol, final value of DH is {:2g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], errH))
         else:
-            print('Iteration number {}, enthalpy variation of {:3g} J/g, final value of DH is {:2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1]))
+            print('Iteration number {}, enthalpy variation of {:3g} J/g, final value of DH is {:2g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], errH))
         j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
         data_baseline[i] = j
         
@@ -522,14 +529,22 @@ def baseline(data_norm, params, files):
         #Standard deviation in the region before and after the peak, used to limit the loops for optimizing the baseline. 
         B_pre = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0],:1]*pre_s + pre_i
         B_post = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0],:1]*post_s + post_i
-        Hst = np.std(data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0],:1] - B_pre)
-        Hst += np.std(data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0],:1] - B_post)
+
+
+        Hst1 = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0]][:,1] - B_pre[:,0] #standard deviation before peak region
+        Hst2 = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0]][:,1] - B_post[:,0] #standard deviation after peak region
+        Hst = np.std(np.append(Hst1, Hst2)) #standard deviation of Cp calculated in baseline regions. 
+        Ns = len(data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0],:1])  +  len(data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0],:1]) #number of points in the two regions
+        delta = np.average(np.diff(data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0]][:,0]))
+        errH = Hst*delta/2*np.sqrt(2.*(len(data_norm[i][:,0])-Ns))
+        
+        
         DH = H[-1] #variation in area between sucessive loops. The first value is set to the total area. 
         itermax = 0
         if 'Mw' in params:
-            s = '\nBaseline substraction for file {}: precision limit of {:.3g} J/mol set by data noise'.format(i, abs(Hst/H[-1]))
+            s = '\nBaseline substraction for file {}:'.format(i)
         else: 
-            s = '\nBaseline substraction for file {}: precision limit of {:.3g} J/g set by data noise'.format(i, abs(Hst/H[-1]))
+            s = '\nBaseline substraction for file {}:'.format(i)
         print(s)
         while  itermax < 100:
             itermax += 1
@@ -538,9 +553,9 @@ def baseline(data_norm, params, files):
             DH = H[-1] - newH[-1]
             H = newH
         if 'Mw' in params:
-            print('Iteration number {}, enthalpy variation of {:.3g} J/mol, final value of DH is {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1]/1e3))
+            print('Iteration number {}, enthalpy variation of {:.3g} J/mol, final value of DH is {:2g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], errH))
         else:
-            print('Iteration number {}, enthalpy variation of {:.3g} J/g, final value of DH is {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1]/1e3))
+            print('Iteration number {}, enthalpy variation of {:.3g} J/g, final value of DH is {:2g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], errH))
         
         
         j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
