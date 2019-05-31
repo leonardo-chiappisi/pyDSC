@@ -164,6 +164,7 @@ def extract_data(files, params, *args, **kwargs):
                 tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer. 
                 data_set = binning(tmp2, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
             data[j] = data_set
+            print('Datafile {} read correctly'.format(j))
     print('\n')
     return data #a dictionary containing all data, already cut, binned, and with the heatrate calculated. 
 
@@ -179,7 +180,7 @@ def binning(data, params):
     else:
         data_binned = data
         stdev = np.empty(len(data_binned[0,:]))
-    if params['Dataformat'][0] == 'Setaram3' or params['Dataformat'][0] == 'Setaram4':
+    if params['Dataformat'][0] == 'Setaram3' or params['Dataformat'][0] == 'Setaram4' or params['Dataformat'][0] == '3cols':
         hrate = np.diff(data_binned[1,:])/np.diff(data_binned[0,:]) 
     else:
         hrate = np.empty(len(stdev)-1)
@@ -448,18 +449,18 @@ def normalize_sampleruns(files, data, params):
     for i in files['S_heating']:
         hr = np.average(data[i][4,:])
         if 'Mw' in params:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm/1000))
         else:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm/1000))
         #print(i, np.average(data[i][4,:])*60)
         data_norm[i] = np.column_stack((data[i][1,:], data[i][2,:]/(hr*sample_norm)))
     
     for i in files['S_cooling']:
         hr = -np.average(data[i][4,:])
         if 'Mw' in params:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm/1000))
         else:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm/1000))
         #print(i, np.average(data[i][4,:])*60)
         data_norm[i] = np.column_stack((data[i][1,:], data[i][2,:]/(hr*sample_norm)))
     return data_norm
@@ -566,7 +567,7 @@ def baseline(data_norm, params, files):
 
 def export_final_data(files, data, params):
     ''' Function which exports the final data-set.'''
-    print('\n', 15*'*', 'Exporting the threated dataset', 15*'*')
+    print('\n', 15*'*', 'Exporting the threated data-set', 15*'*')
     
     def export(file, data, params):
         filename = os.path.join('Output', 'exp-' + str(file)) 

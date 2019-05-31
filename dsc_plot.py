@@ -76,7 +76,7 @@ def plot_corrected_data(files, data, params):
         else:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
-        ax.legend(loc='upper left')
+        #ax.legend(loc='upper left')
     
     
     def plot(ax, data, file, Mw = True):
@@ -112,7 +112,7 @@ def plot_final_data(files, data, params):
         else:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
-        ax.legend(loc='upper left')
+        #ax.legend(loc='upper left')
     
     
     def plot(ax, data, file, Mw = True):
@@ -153,13 +153,12 @@ def plot_baseline_data(files, data, params):
         else:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
-        ax.legend(loc='upper left')
+        #ax.legend(loc='upper left')
     
     
     def plot(ax, data, file, Mw = True):
         ax.plot(data[file][:,0], data[file][:,2], linestyle = '-' )
         ax.plot(data[file][:,0], data[file][:,3], linestyle = '-.' )
-        print(file)
         if file in files['S_heating']:
             ax.axvspan(float(params['ROI_h'][0]), float(params['ROP_h'][0]), facecolor='#a9a9a9', alpha=0.5)
             ax.axvspan(float(params['ROI_h'][1]), float(params['ROP_h'][1]), facecolor='#a9a9a9', alpha=0.5)
