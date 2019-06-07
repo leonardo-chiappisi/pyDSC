@@ -1,13 +1,13 @@
-Dataformat: Setaram4  	#Dataformat in which data are saved. See the readme for all possibilities. 
-ROI_h: 28.0, 50.0 	#Region of interest for the heating runs, please the range of temperatures probed by the program. 
-ROI_c: 28.0, 53.0 	#Region of interest for the heating runs, please the range of temperatures probed by the program. 
-mass_s: 497.0 		#mass of the sample solution, in mg
-mass_r: 495.0 		#mass of the solution in the reference cell, in mg
-mass_bb: 100.0 		#[needed for buffer correctoion] mass difference between the buffer solution in the sample cell and in the reference (sample-reference) in the buffer-buffer experiment, in mg. If no buffer-buffer experiment was performed, this line will be ignored.
-s_wt: 0.001 		#Concentration of the sample, in weight percent. 1% will be 0.01; 100% is 1.0
-Scanrate_h: 1.0		#Scanrate for the heating experiments, in K/min. If the data contain the time and temperature information, this line will be ignored. 
-Scanrate_c: 1.0 	#Scanrate for the cooling experiments, in K/min. If the data contain the time and temperature information, this line will be ignored.
-bins: 10 		#Size of the bins used to reduce the file size. i.e., a file of length N is reduced to N/bins, whereby bins number of points are averaged.
-ROP_h: 34.0, 44.0	#region where the peak is found in the heating scans
-ROP_c: 34.5, 47.0	#region where the peak is found in the cooling scans
-Mw: 			#[optional]Provide Mw for data in J/mol instead of J/g. 
+Dataformat: Setaram3temptime  	#Dataformat in which data are saved. See the readme for all possibilities. 
+ROI_h: 15.0, 60.0 	#Region of interest for the heating runs, please the range of temperatures probed by the program. 
+ROI_c: 10.0, 50.0 	#Region of interest for the cooling runs, please the range of temperatures probed by the program. 
+mass_s: 530.6 		#mass of the sample solution, in mg
+mass_r: 523.14 		#mass of the solution in the reference cell, in mg
+mass_bb: 11.21 		#[needed for buffer correctoion] mass difference between the buffer solution in the sample cell and in the reference (sample-reference) in the buffer-buffer experiment, in mg. If no buffer-buffer experiment was performed, this line will be ignored.
+s_wt: 0.085 		#Concentration of the sample, in weight percent. 1% will be 0.01; 100% is 1.0
+Scanrate_h: 0.5		#Scanrate for the heating experiments, in K/min. If the data contain the time and temperature information, this line will be ignored. 
+Scanrate_c: 1.2 	#Scanrate for the cooling experiments, in K/min. If the data contain the time and temperature information, this line will be ignored.
+bins: 20 		#Size of the bins used to reduce the file size. i.e., a file of length N is reduced to N/bins, whereby bins number of points are averaged.
+ROP_h: 20.0, 45.0	#region where the peak is found in the heating scans
+ROP_c: 15.0, 42.0	#region where the peak is found in the cooling scans
+Mw: 4600		#[optional]Provide Mw in g/mol for data in J/mol instead of J/g. 

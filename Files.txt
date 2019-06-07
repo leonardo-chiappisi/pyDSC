@@ -1,6 +1,6 @@
-Sample heating cycles:  	SM_LPS_in_H2O_h1.txt, SM_LPS_in_H2O_h2.txt, SM_LPS_in_H2O_h3.txt
-Empty cell heating cycles: 	SM_EC-EC_h1.txt, SM_EC-EC_h2.txt, SM_EC-EC_h3.txt
+Sample heating cycles:  	P85_2, P85_4, P85_6
+Empty cell heating cycles: 	
 Buffer heating cycles:		
-Sample cooling cycles: 		SM_LPS_in_H2O_c1.txt, SM_LPS_in_H2O_c2.txt, SM_LPS_in_H2O_c3.txt
-Empty cell cooling cycles: 	SM_EC-EC_c1.txt, SM_EC-EC_c2.txt, SM_EC-EC_c3.txt
+Sample cooling cycles: 		P85_3, P85_5, P85_7
+Empty cell cooling cycles: 	
 Buffer cooling cycles:		

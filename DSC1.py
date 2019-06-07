@@ -127,7 +127,7 @@ def extract_data(files, params, *args, **kwargs):
     At the end, all files will be saves as time, temperature, heatflow. If the time information is not given, the first column will be filled with zeros.
     
     All file definitions are given in the readme file. TODO
-    Availabe data formats are: setaram3
+    Availabe data formats are: Setaram3, Setaram4, 3cols, Setaram3temptime
     '''
     print(15*'*', 'Reading data files', 15*'*')
     data = {} #Creation of empty dictionary, where the datasets will be stored, indexed by their filename. 
@@ -141,8 +141,16 @@ def extract_data(files, params, *args, **kwargs):
                         while 'Furnace' not in line.split():
                             line = inp.readline()
                             hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2)) #imports all data stored in files
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding='latin1') #imports all data stored in files
                 
+                if params['Dataformat'][0] == 'Setaram3temptime':
+                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
+                        hl = 1 #length of the header of the file to be read. 
+                        line = inp.readline()
+                        while 'Furnace' not in line.split():
+                            line = inp.readline()
+                            hl += 1
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding='latin1') #imports all data stored in files
                 elif params['Dataformat'][0] == 'Setaram4':
                     with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
                         hl = 1 #length of the header of the file to be read. 
@@ -150,8 +158,14 @@ def extract_data(files, params, *args, **kwargs):
                         while 'Furnace' not in line.split():
                             line = inp.readline()
                             hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(1,2,3)) #imports all data stored in files
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding='latin1') #imports all data stored in files
+                    
+                elif params['Dataformat'][0] == '3cols':
+                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
+                        hl = 1 #length of the header of the file to be read. 
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2)) #imports all data stored in files
                 
+
                 if 'heating' in key:
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
                 elif 'cooling' in key:
@@ -159,6 +173,7 @@ def extract_data(files, params, *args, **kwargs):
                 tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer. 
                 data_set = binning(tmp2, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
             data[j] = data_set
+            print('Datafile {} read correctly'.format(j))
     print('\n')
     return data #a dictionary containing all data, already cut, binned, and with the heatrate calculated. 
 
@@ -174,7 +189,8 @@ def binning(data, params):
     else:
         data_binned = data
         stdev = np.empty(len(data_binned[0,:]))
-    if params['Dataformat'][0] == 'Setaram3' or params['Dataformat'][0] == 'Setaram4':
+    if params['Dataformat'][0] != '2cols':
+    #if params['Dataformat'][0] == 'Setaram3' or params['Dataformat'][0] == 'Setaram4' or params['Dataformat'][0] == '3cols':
         hrate = np.diff(data_binned[1,:])/np.diff(data_binned[0,:]) 
     else:
         hrate = np.empty(len(stdev)-1)
@@ -212,7 +228,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                     
 #veryfies that the cooling files are really a heating file. If not, program stops.                
             if 'cooling' in key:
-                if (data[i][1,1] < data[i][1,-1]): 
+                if (data[i][1,1] < data[i][1,-1]):
                     raise Exception('Error: {} is not a cooling file!'.format(i))
                     
 #Verification for a constant heatrate and if it is consistent with the one provided in parameter file. 
@@ -438,23 +454,23 @@ def normalize_sampleruns(files, data, params):
     data_norm = dict()
     sample_norm = float(params['mass_s'][0])*float(params['s_wt'][0])/1000*1000   #Normalization factor given by the sample mass in grams and from mW to W
     if 'Mw' in params:
-        sample_norm *= float(params['Mw'][0])  #if Mw is provided, the data will be normalized by the moles of compound. 
+        sample_norm /= float(params['Mw'][0])  #if Mw is provided, the data will be normalized by the moles of compound. 
     
     for i in files['S_heating']:
         hr = np.average(data[i][4,:])
         if 'Mw' in params:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm/1000))
         else:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm/1000))
         #print(i, np.average(data[i][4,:])*60)
         data_norm[i] = np.column_stack((data[i][1,:], data[i][2,:]/(hr*sample_norm)))
     
     for i in files['S_cooling']:
         hr = -np.average(data[i][4,:])
         if 'Mw' in params:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} moles of sample.'.format(i, hr, hr*60, sample_norm/1000))
         else:
-            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm))
+            print('File {} is normalized by a heating rate of {:.2g} K/s, equivalent to {:.2f} K/min, and by {:.2e} grams of sample.'.format(i, hr, hr*60, sample_norm/1000))
         #print(i, np.average(data[i][4,:])*60)
         data_norm[i] = np.column_stack((data[i][1,:], data[i][2,:]/(hr*sample_norm)))
     return data_norm
@@ -482,16 +498,18 @@ def baseline(data_norm, params, files):
         #Standard deviation in the region before and after the peak, used to limit the loops for optimizing the baseline. 
         B_pre = data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0],:1]*pre_s + pre_i
         B_post = data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0],:1]*post_s + post_i
-        Hst = np.std(data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0],:1] - B_pre)
-        Hst += np.std(data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0],:1] - B_post)
-        
+         ### Evaluation of uncertainty in the DH ###
+        Hst1 = data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0]][:,1] - B_pre[:,0] #standard deviation before peak region
+        Hst2 = data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0]][:,1] - B_post[:,0] #standard deviation after peak region
+        Hst = np.std(np.append(Hst1, Hst2)) #standard deviation of Cp calculated in baseline regions. 
+        Ns = len(data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0],:1])  +  len(data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0],:1]) #number of points in the two regions
+        delta = np.average(np.diff(data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0]][:,0]))
+        errH = Hst*delta/2*np.sqrt(2.*(len(data_norm[i][:,0])-Ns))
+#        print('Error is', errH)
         DH = H[-1] #variation in area between sucessive loops. The first value is set to the total area. 
         itermax = 0
         newbase = base1
-        if 'Mw' in params:
-            s = '\nBaseline substraction for file {}: precision limit of {:.3g} J/mol set by data noise'.format(i, abs(Hst/H[-1]))
-        else: 
-            s = '\nBaseline substraction for file {}: precision limit of {:.3g} J/g set by data noise'.format(i, abs(Hst/H[-1]))
+        s = '\nBaseline substraction for file {}'.format(i)
         print(s)
         while itermax < 100:
             itermax += 1
@@ -500,9 +518,9 @@ def baseline(data_norm, params, files):
             DH = H[-1] - newH[-1]
             H = newH
         if 'Mw' in params:
-            print('Iteration number {}, enthalpy variation of {:3g} J/mol, final value of DH is {:2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1]))
+            print('Iteration number {}, enthalpy variation of {:3g} J/mol, final value of DH is {:2g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], errH))
         else:
-            print('Iteration number {}, enthalpy variation of {:3g} J/g, final value of DH is {:2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1]))
+            print('Iteration number {}, enthalpy variation of {:3g} J/g, final value of DH is {:2g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], errH))
         j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
         data_baseline[i] = j
         
@@ -522,14 +540,22 @@ def baseline(data_norm, params, files):
         #Standard deviation in the region before and after the peak, used to limit the loops for optimizing the baseline. 
         B_pre = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0],:1]*pre_s + pre_i
         B_post = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0],:1]*post_s + post_i
-        Hst = np.std(data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0],:1] - B_pre)
-        Hst += np.std(data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0],:1] - B_post)
+
+
+        Hst1 = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0]][:,1] - B_pre[:,0] #standard deviation before peak region
+        Hst2 = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0]][:,1] - B_post[:,0] #standard deviation after peak region
+        Hst = np.std(np.append(Hst1, Hst2)) #standard deviation of Cp calculated in baseline regions. 
+        Ns = len(data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0],:1])  +  len(data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0],:1]) #number of points in the two regions
+        delta = np.average(np.diff(data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0]][:,0]))
+        errH = Hst*delta/2*np.sqrt(2.*(len(data_norm[i][:,0])-Ns))
+        
+        
         DH = H[-1] #variation in area between sucessive loops. The first value is set to the total area. 
         itermax = 0
         if 'Mw' in params:
-            s = '\nBaseline substraction for file {}: precision limit of {:.3g} J/mol set by data noise'.format(i, abs(Hst/H[-1]))
+            s = '\nBaseline substraction for file {}:'.format(i)
         else: 
-            s = '\nBaseline substraction for file {}: precision limit of {:.3g} J/g set by data noise'.format(i, abs(Hst/H[-1]))
+            s = '\nBaseline substraction for file {}:'.format(i)
         print(s)
         while  itermax < 100:
             itermax += 1
@@ -538,9 +564,9 @@ def baseline(data_norm, params, files):
             DH = H[-1] - newH[-1]
             H = newH
         if 'Mw' in params:
-            print('Iteration number {}, enthalpy variation of {:.3g} J/mol, final value of DH is {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1]/1e3))
+            print('Iteration number {}, enthalpy variation of {:.3g} J/mol, final value of DH is {:2g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], errH))
         else:
-            print('Iteration number {}, enthalpy variation of {:.3g} J/g, final value of DH is {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1]/1e3))
+            print('Iteration number {}, enthalpy variation of {:.3g} J/g, final value of DH is {:2g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], errH))
         
         
         j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
@@ -551,7 +577,7 @@ def baseline(data_norm, params, files):
 
 def export_final_data(files, data, params):
     ''' Function which exports the final data-set.'''
-    print('\n', 15*'*', 'Exporting the threated dataset', 15*'*')
+    print('\n', 15*'*', 'Exporting the treated data-set', 15*'*')
     
     def export(file, data, params):
         filename = os.path.join('Output', 'exp-' + str(file)) 

@@ -71,16 +71,13 @@ def plot_corrected_data(files, data, params):
     
     def applyPlotStyle(title, idx, Mw = True):
         ax.set_xlabel('Temperature / degC')
-        if Mw:
-            ax.set_ylabel('Heat capacity / J K$^{-1}$ mol$^{-1}$')
-        else:
-            ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
+        ax.set_ylabel('Heat capacity / J K$^{-1}$')
         ax.set_title(title)
-        ax.legend(loc='upper left')
+        #ax.legend(loc='upper left')
     
     
     def plot(ax, data, file, Mw = True):
-        ax.plot(data[file][1,:], data[file][2,:]/np.average(data[file][4,:]), '--bo', markersize=3, linewidth=1, label=file)
+        ax.plot(data[file][1,:], data[file][2,:]/np.average(data[file][4,:])/1000, '--bo', markersize=3, linewidth=1, label=file)
     
     N = len(data)
     cols = int(np.ceil(np.sqrt(N)))
@@ -90,7 +87,7 @@ def plot_corrected_data(files, data, params):
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
     
     i = 0
-    for file in data:
+    for file in sorted(data):
         ax = fig.add_subplot(gs[i])
         applyPlotStyle(file, ax, Mw = 'Mw' in params)
         plot(ax, data, file, Mw = 'Mw' in params)
@@ -112,7 +109,7 @@ def plot_final_data(files, data, params):
         else:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
-        ax.legend(loc='upper left')
+        #ax.legend(loc='upper left')
     
     
     def plot(ax, data, file, Mw = True):
@@ -130,7 +127,7 @@ def plot_final_data(files, data, params):
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
     
     i = 0
-    for file in data:
+    for file in sorted(data):
         ax = fig.add_subplot(gs[i])
         applyPlotStyle(file, ax, Mw = 'Mw' in params)
         plot(ax, data, file, Mw = 'Mw' in params)
@@ -153,18 +150,18 @@ def plot_baseline_data(files, data, params):
         else:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
-        ax.legend(loc='upper left')
+        #ax.legend(loc='upper left')
     
     
     def plot(ax, data, file, Mw = True):
         ax.plot(data[file][:,0], data[file][:,2], linestyle = '-' )
         ax.plot(data[file][:,0], data[file][:,3], linestyle = '-.' )
-        print(file)
         if file in files['S_heating']:
             ax.axvspan(float(params['ROI_h'][0]), float(params['ROP_h'][0]), facecolor='#a9a9a9', alpha=0.5)
             ax.axvspan(float(params['ROI_h'][1]), float(params['ROP_h'][1]), facecolor='#a9a9a9', alpha=0.5)
         if file in files['S_cooling']:
-            print('no')
+            ax.axvspan(float(params['ROI_c'][0]), float(params['ROP_c'][0]), facecolor='#a9a9a9', alpha=0.5)
+            ax.axvspan(float(params['ROI_c'][1]), float(params['ROP_c'][1]), facecolor='#a9a9a9', alpha=0.5)
         #ax.axvspan(58.0, 60.0, facecolor='g', alpha=0.5)
 
     
@@ -176,7 +173,7 @@ def plot_baseline_data(files, data, params):
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
     
     i = 0
-    for file in data:
+    for file in sorted(data):
         ax = fig.add_subplot(gs[i])
         applyPlotStyle(file, ax, Mw = 'Mw' in params)
         plot(ax, data, file, Mw = 'Mw' in params)
