@@ -1,6 +1,6 @@
 Dataformat: Setaram4  	#Dataformat in which data are saved. See the readme for all possibilities. 
 ROI_h: 28.0, 50.0 	#Region of interest for the heating runs, please the range of temperatures probed by the program. 
-ROI_c: 28.0, 53.0 	#Region of interest for the heating runs, please the range of temperatures probed by the program. 
+ROI_c: 28.0, 53.0 	#Region of interest for the cooling runs, please the range of temperatures probed by the program. 
 mass_s: 497.0 		#mass of the sample solution, in mg
 mass_r: 495.0 		#mass of the solution in the reference cell, in mg
 mass_bb: 100.0 		#[needed for buffer correctoion] mass difference between the buffer solution in the sample cell and in the reference (sample-reference) in the buffer-buffer experiment, in mg. If no buffer-buffer experiment was performed, this line will be ignored.
