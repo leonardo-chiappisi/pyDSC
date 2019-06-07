@@ -127,7 +127,7 @@ def extract_data(files, params, *args, **kwargs):
     At the end, all files will be saves as time, temperature, heatflow. If the time information is not given, the first column will be filled with zeros.
     
     All file definitions are given in the readme file. TODO
-    Availabe data formats are: setaram3
+    Availabe data formats are: Setaram3, Setaram4, 3cols, Setaram3temptime
     '''
     print(15*'*', 'Reading data files', 15*'*')
     data = {} #Creation of empty dictionary, where the datasets will be stored, indexed by their filename. 
@@ -141,8 +141,16 @@ def extract_data(files, params, *args, **kwargs):
                         while 'Furnace' not in line.split():
                             line = inp.readline()
                             hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2)) #imports all data stored in files
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding='latin1') #imports all data stored in files
                 
+                if params['Dataformat'][0] == 'Setaram3temptime':
+                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
+                        hl = 1 #length of the header of the file to be read. 
+                        line = inp.readline()
+                        while 'Furnace' not in line.split():
+                            line = inp.readline()
+                            hl += 1
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding='latin1') #imports all data stored in files
                 elif params['Dataformat'][0] == 'Setaram4':
                     with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
                         hl = 1 #length of the header of the file to be read. 
@@ -150,13 +158,14 @@ def extract_data(files, params, *args, **kwargs):
                         while 'Furnace' not in line.split():
                             line = inp.readline()
                             hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(1,2,3)) #imports all data stored in files
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding='latin1') #imports all data stored in files
                     
                 elif params['Dataformat'][0] == '3cols':
                     with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
                         hl = 1 #length of the header of the file to be read. 
                     tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2)) #imports all data stored in files
                 
+
                 if 'heating' in key:
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
                 elif 'cooling' in key:
@@ -180,7 +189,8 @@ def binning(data, params):
     else:
         data_binned = data
         stdev = np.empty(len(data_binned[0,:]))
-    if params['Dataformat'][0] == 'Setaram3' or params['Dataformat'][0] == 'Setaram4' or params['Dataformat'][0] == '3cols':
+    if params['Dataformat'][0] != '2cols':
+    #if params['Dataformat'][0] == 'Setaram3' or params['Dataformat'][0] == 'Setaram4' or params['Dataformat'][0] == '3cols':
         hrate = np.diff(data_binned[1,:])/np.diff(data_binned[0,:]) 
     else:
         hrate = np.empty(len(stdev)-1)
@@ -218,7 +228,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                     
 #veryfies that the cooling files are really a heating file. If not, program stops.                
             if 'cooling' in key:
-                if (data[i][1,1] < data[i][1,-1]): 
+                if (data[i][1,1] < data[i][1,-1]):
                     raise Exception('Error: {} is not a cooling file!'.format(i))
                     
 #Verification for a constant heatrate and if it is consistent with the one provided in parameter file. 
@@ -444,7 +454,7 @@ def normalize_sampleruns(files, data, params):
     data_norm = dict()
     sample_norm = float(params['mass_s'][0])*float(params['s_wt'][0])/1000*1000   #Normalization factor given by the sample mass in grams and from mW to W
     if 'Mw' in params:
-        sample_norm *= float(params['Mw'][0])  #if Mw is provided, the data will be normalized by the moles of compound. 
+        sample_norm /= float(params['Mw'][0])  #if Mw is provided, the data will be normalized by the moles of compound. 
     
     for i in files['S_heating']:
         hr = np.average(data[i][4,:])
@@ -567,7 +577,7 @@ def baseline(data_norm, params, files):
 
 def export_final_data(files, data, params):
     ''' Function which exports the final data-set.'''
-    print('\n', 15*'*', 'Exporting the threated data-set', 15*'*')
+    print('\n', 15*'*', 'Exporting the treated data-set', 15*'*')
     
     def export(file, data, params):
         filename = os.path.join('Output', 'exp-' + str(file)) 

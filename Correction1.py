@@ -8,6 +8,8 @@ Edit 2019.02.19: dsc.correction function was added.
 Edit 2019.05.02: correction of small bugs in the dsc.correction function and addition of the plot_baseline_data function. 
 Edit 2019.05.29: Included input dataformat 3cols and evaluated error in DH from data noise. Correction small bugs. 
 Edit 2019.05.30: Small bug correction.
+Edit 2019.06.05: Added latin1 encoding in the setaram data formats
+Edit 2019.06.07: Small bug corrections. 
 """
 
 
