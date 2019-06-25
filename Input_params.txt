@@ -11,3 +11,5 @@ bins: 20 		#Size of the bins used to reduce the file size. i.e., a file of lengt
 ROP_h: 20.0, 45.0	#region where the peak is found in the heating scans
 ROP_c: 15.0, 42.0	#region where the peak is found in the cooling scans
 Mw: 4600		#[optional]Provide Mw in g/mol for data in J/mol instead of J/g. 
+Input: exo-up		#Convention used for input files, can be exo-up or exo-down. 	
+Output: exo-down		#Convention used for output files, can be exo-up or exo-down.

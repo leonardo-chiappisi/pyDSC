@@ -105,7 +105,7 @@ def plot_final_data(files, data, params):
     def applyPlotStyle(title, idx, Mw = True):
         ax.set_xlabel('Temperature / degC')
         if Mw:
-            ax.set_ylabel('Heat capacity / J K$^{-1}$ mol$^{-1}$')
+            ax.set_ylabel('Heat capacity / kJ K$^{-1}$ mol$^{-1}$')
         else:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
@@ -113,12 +113,15 @@ def plot_final_data(files, data, params):
     
     
     def plot(ax, data, file, Mw = True):
-        ax.plot(data[file][:,0], data[file][:,1])
         if Mw:
-            ax.annotate('DH = {:1.0f} J/mol'.format(data[file][-1,4]), xy=(0.05, 0.05), xycoords='axes fraction')
+            ax.plot(data[file][:,0], data[file][:,1]/1e3)
+            ax.annotate('DH = {:0.3g} kJ/mol'.format(data[file][-1,4]/1e3), xy=(0.65, 0.15), xycoords='axes fraction')
         else:
-            ax.annotate('DH = {:1.1f} J/g'.format(data[file][-1,4]), xy=(0.05, 0.05), xycoords='axes fraction')
-    
+            ax.plot(data[file][:,0], data[file][:,1])
+            ax.annotate('DH = {:0.3g} J/g'.format(data[file][-1,4]), xy=(0.70, 0.15), xycoords='axes fraction')
+        #ax.annotate('{}'.format(params['Output'][0]), xy=(0.80, 0.05), xycoords='axes fraction')
+        #ax.arrow( 0.1, 0.1, 0.0, 0.2, fc="k", ec="k", head_width=0.05, head_length=0.1, xycoords='axes fraction' )
+        
     N = len(data)
     cols = int(np.ceil(np.sqrt(N)))
     rows = int(np.ceil(N/cols))
