@@ -1,7 +1,0 @@
-ww
-rif: 523.14 mg
-sample: 534.35 mg
-
-P85
-rif: 523.14 mg H2O
-sample: 530.6 mg (0.18594gP85+1.99736g H2O)
