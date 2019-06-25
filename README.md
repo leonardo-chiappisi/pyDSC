@@ -1,6 +1,6 @@
 # DSC_correction
 Set of python scripts for the correction of DSC data. 
 
-To run the program, please copy all the needed input files into the folder rawdata. Modify the two input files 'Files.txt' and 'Input_params.txt' according to your needs. To run the program, execute Correction1.py. 
+To run the program, please copy all the needed input files into the folder rawdata. Modify the two input files 'Files.txt' and 'Input_params.txt' according to your needs. To run the program, execute pyDSC.py. 
 
-A comprehensive description of the program will be provided soon. It normalizes the rawdata, corrects for the empty cell and buffer contributions, and performs a baseline subtraction. 
+The program normalizes the rawdata, corrects for the empty cell and buffer contributions (if provided), and performs a baseline subtraction. Values like enthalpy change, heat capacity change are autamically calculated. For further informations please refer to the manual of the program. 
