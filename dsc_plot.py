@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import numpy as np
 
+plt.rcParams['text.usetex'] = False
 
 def plot_raw_data(files, data, params):
     ''' Plots the raw_data'''

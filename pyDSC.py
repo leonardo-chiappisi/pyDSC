@@ -14,7 +14,7 @@ Edit 2019.06.25: Several information are now included in the output files. Progr
 """
 
 version = '0.1'
-date = '2019.06.25'
+date = '2019.06.26'
 
 #import numpy as np   #imports numpy
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 

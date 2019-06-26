@@ -226,7 +226,7 @@ def extract_data(files, params, *args, **kwargs):
                 tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer. 
                 data_set = binning(tmp2, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
                 if params['Input'][0] != params['Output'][0]:
-                    data_set[-1,:] *= -1
+                    data_set[2,:] *= -1
             data[j] = data_set
             print('Datafile {} read correctly'.format(j))
     print('\n')
@@ -271,7 +271,6 @@ def check_data(data, files, params):
                     raise Exception('Error: {} is not a heating file!'.format(i))
 #Verification for a constant heatrate and if it is consistent with the one provided in parameter file. 
                 hr, hrstd = data[i][4,:].mean()*60, data[i][4,:].std()*60
-                
                 if 'S_heating' in key:
                  header_heating[i] += '# Heating rate = {:.2f} K/min. \n'.format(hr)
                 
