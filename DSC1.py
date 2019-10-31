@@ -184,6 +184,7 @@ def extract_data(files, params, *args, **kwargs):
     '''
     print(15*'*', 'Reading data files', 15*'*')
     data = {} #Creation of empty dictionary, where the datasets will be stored, indexed by their filename. 
+    dataraw = {} #Creation of empty dictionary, where the datasets will be stored, indexed by their filename. 
     for key in files: 
         for j in files[key]: #the two for loops run over all files defined in the file_input definition file. 
             if j:  #this if sentence is made to avoid trying to read empty key values. 
@@ -196,7 +197,7 @@ def extract_data(files, params, *args, **kwargs):
                             hl += 1
                     tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding='latin1') #imports all data stored in files
                 
-                if params['Dataformat'][0] == 'Setaram3temptime':
+                elif params['Dataformat'][0] == 'Setaram3temptime':
                     with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
                         hl = 1 #length of the header of the file to be read. 
                         line = inp.readline()
@@ -225,12 +226,16 @@ def extract_data(files, params, *args, **kwargs):
                     mask = ((float(params['ROI_c'][0]) < tmp[1,:]) & (float(params['ROI_c'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
                 tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer. 
                 data_set = binning(tmp2, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
-                if params['Input'][0] != params['Output'][0]:
+                
+                if params['Input'][0] != params['Output'][0]: #renormalized from exo-up to exo-down convention, or viceversa. 
                     data_set[2,:] *= -1
+            
             data[j] = data_set
+            dataraw[j] = tmp2
+            
             print('Datafile {} read correctly'.format(j))
     print('\n')
-    return data #a dictionary containing all data, already cut, binned, and with the heatrate calculated. 
+    return data, dataraw #a dictionary containing all data, already cut, binned, and with the heatrate calculated. 
 
 
 def binning(data, params):

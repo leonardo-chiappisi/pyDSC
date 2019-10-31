@@ -11,6 +11,7 @@ Edit 2019.05.30: Small bug correction.
 Edit 2019.06.05: Added latin1 encoding in the setaram data formats
 Edit 2019.06.07: Small bug corrections.
 Edit 2019.06.25: Several information are now included in the output files. Program takes care of exo-up or exo-down convention.  Version number and date will be added to the exported files. 
+Edit 2019.10.31: In plot.plot_raw_data the raw heatflow is not plotted. 
 """
 
 version = '0.1'
@@ -24,10 +25,10 @@ import numpy as np
 
 files = dsc.read_files(version,date)  #creates a dictionary which contains all filenames used by the script
 params = dsc.read_params() #reads from the input files the parameters necessary to analyse the data, from the masses to the definiton of the temperature ranges 
-data = dsc.extract_data(files, params) #creates an array which contains all the data values within the ROIs and already binned. 
+data, dataraw = dsc.extract_data(files, params) #creates an array which contains all the data values within the ROIs and already binned. 
 #print(data['Buffer_h3.dat'])
 dsc.check_data(data, files, params) #veryfies that all input values are correct. 
-plot.plot_raw_data(files, data, params) #plots the raw data. 
+plot.plot_raw_data(files, dataraw, params) #plots the raw data. 
 refs = dsc.average_refs(data, files) #averages the reference measurements. If the size of the reference measurements does not fit, only the longest one is considered. 
 #refs is a dictionary containing the reference measurements.
 data_c = dsc.correction(data, refs, files, params)
