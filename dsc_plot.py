@@ -19,6 +19,61 @@ def plot_raw_data(files, data, params):
      
     def applyPlotStyle(title, idx):
         axes[idx[0], idx[1]].set_xlabel('Temperature / degC')
+        axes[idx[0], idx[1]].set_ylabel('Heat flow / 10$^{-3}$ W')
+        axes[idx[0], idx[1]].set_title(title)
+        #axes[idx[0], idx[1]].legend(loc='upper left')
+        
+    fig, axes= plt.subplots(nrows=2, ncols=3, figsize=(16/1.1,9/1.1))
+
+    idx = [0,0]
+    applyPlotStyle('Buffer Heating', idx)
+    for i in files['B_heating']:
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
+        axes[idx[0], idx[1]].legend()
+        
+    idx = [0,1]
+    applyPlotStyle('EC Heating', idx)
+    for i in files['EC_heating']:
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
+        axes[idx[0], idx[1]].legend()
+        
+    idx = [0,2]
+    applyPlotStyle('Sample Heating', idx)
+    for i in files['S_heating']:    
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
+        axes[idx[0], idx[1]].legend()
+
+    idx = [1,0]
+    applyPlotStyle('Buffer Cooling', idx)
+    for i in files['B_cooling']:
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
+        axes[idx[0], idx[1]].legend()
+        
+    idx = [1,1]
+    applyPlotStyle('EC Cooling', idx)
+    for i in files['EC_cooling']:
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
+        axes[idx[0], idx[1]].legend()
+        
+    idx = [1,2]
+    applyPlotStyle('Sample Cooling', idx)
+    for i in files['S_cooling']:    
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i) 
+        axes[idx[0], idx[1]].legend()
+    
+    plt.tight_layout()
+    plt.savefig('Rawdata.pdf')
+    plt.close(fig)  
+   
+    
+    
+def plot_raw_data_old(files, data, params):
+    ''' Plots the raw_data'''
+    
+    print('\n', 15*'*', 'Plotting the raw data', 15*'*')
+     
+    def applyPlotStyle(title, idx):
+        axes[idx[0], idx[1]].set_xlabel('Temperature / degC')
         axes[idx[0], idx[1]].set_ylabel('Heat capacity / 10$^{-3}$ J K$^{-1}$')
         axes[idx[0], idx[1]].set_title(title)
         #axes[idx[0], idx[1]].legend(loc='upper left')
@@ -64,7 +119,6 @@ def plot_raw_data(files, data, params):
     plt.tight_layout()
     plt.savefig('Rawdata.pdf')
     plt.close(fig)  
-    
     
 def plot_corrected_data(files, data, params):
     ''' Plots the corrected data'''
