@@ -371,8 +371,10 @@ and is not consistent with the one provided in the input parameter file of {:.2g
             
     for key in header_heating:
         header_heating[key] += '# Data between {} and {} degC were analyzed. \n'.format(params['ROI_h'][0], params['ROI_h'][1])
+        header_heating[key] += '# Peak is located between {} and {} degC. \n'.format(params['ROP_h'][0], params['ROP_h'][1])
     for key in header_cooling:
         header_cooling[key] += '# Data between {} and {} degC were analyzed. \n'.format(params['ROI_c'][0], params['ROI_c'][1])
+        header_cooling[key] += '# Peak is located between{} and {} degC. \n'.format(params['ROP_c'][0], params['ROP_c'][1])
         
     if W_counter == 0 and D_counter == 0:
         print('Check performed sucessfully. No errors encountered!')    
@@ -603,7 +605,7 @@ def baseline(data_norm, params, files):
             H = newH
         if 'Mw' in params:
             print('Iteration number {}, enthalpy variation of {:3g} J/mol, final value of DH is {:.5g} +- {:.2g} kJ/mol'.format(itermax, abs(DH/H[-1]), H[-1]/1e3, abs(errH)/1e3))
-            header_heating[i] += '# DH of the heating run is {} +- {} J/mol. \n'.format(*roundError(H[-1]/1e3, abs(errH/1e3)))
+            header_heating[i] += '# DH of the heating run is {:.5g} +- {:.2g} kJ/mol. \n'.format(*roundError(H[-1]/1e3, abs(errH/1e3)))
         else:
             print('Iteration number {}, enthalpy variation of {:3g} J/g, final value of DH is {:.5g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], abs(errH)))
             header_heating[i] += '# DH of the heating run is {:.5g} +- {:.2g} J/g. \n'.format(H[-1], abs(errH))
