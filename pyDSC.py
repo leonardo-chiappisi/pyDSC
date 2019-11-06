@@ -12,10 +12,11 @@ Edit 2019.06.05: Added latin1 encoding in the setaram data formats
 Edit 2019.06.07: Small bug corrections.
 Edit 2019.06.25: Several information are now included in the output files. Program takes care of exo-up or exo-down convention.  Version number and date will be added to the exported files. 
 Edit 2019.10.31: In plot.plot_raw_data the raw heatflow is not plotted. 
+Edit 2019.11.06: Small bugs corrected. 
 """
 
-version = '0.1'
-date = '2019.06.26'
+version = '0.2'
+date = '2019.11.06'
 
 #import numpy as np   #imports numpy
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 

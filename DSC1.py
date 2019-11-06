@@ -364,9 +364,9 @@ and is not consistent with the one provided in the input parameter file of {:.2g
             raise Exception('Cooling run lengths differ by more than 5% to be threated at the same time. Evaluate if analysing them separately.') 
 
 #Checks that the peak is defined within the region of interest
-    if params['ROP_h'][0] <  params['ROI_h'][0] or params['ROP_h'][1] >  params['ROI_h'][1]:
+    if float(params['ROP_h'][0]) < float(params['ROI_h'][0]) or float(params['ROP_h'][1]) >  float(params['ROI_h'][1]):
         raise Exception('Peak in heating run falls out of region of interest. Verify the regions of interest and the region of peak.')
-    if params['ROP_c'][0] <  params['ROI_c'][0] or params['ROP_c'][1] >  params['ROI_c'][1]:
+    if float(params['ROP_c'][0]) <  float(params['ROI_c'][0]) or float(params['ROP_c'][1]) >  float(params['ROI_c'][1]):
         raise Exception('Peak in cooling run falls out of region of interest. Verify the regions of interest and the region of peak.')
             
     for key in header_heating:
