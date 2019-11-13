@@ -13,6 +13,7 @@ Edit 2019.06.07: Small bug corrections.
 Edit 2019.06.25: Several information are now included in the output files. Program takes care of exo-up or exo-down convention.  Version number and date will be added to the exported files. 
 Edit 2019.10.31: In plot.plot_raw_data the raw heatflow is not plotted. 
 Edit 2019.11.06: Small bugs corrected. 
+Edit 2019.11.13: Added the function plot_alpha, which plots the degree of conversion of all sample runs. Changed degC to °C in plots. 
 """
 
 version = '0.2'
@@ -39,5 +40,6 @@ data_norm = dsc.normalize_sampleruns(files, data_c, params)
 data_final = dsc.baseline(data_norm, params, files) 
 plot.plot_baseline_data(files, data_final, params)
 plot.plot_final_data(files, data_final, params)
+plot.plot_alpha(files, data_final, params)
 dsc.export_final_data(files, data_final, params)
 

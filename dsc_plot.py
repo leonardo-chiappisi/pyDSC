@@ -18,7 +18,7 @@ def plot_raw_data(files, data, params):
     print('\n', 15*'*', 'Plotting the raw data', 15*'*')
      
     def applyPlotStyle(title, idx):
-        axes[idx[0], idx[1]].set_xlabel('Temperature / degC')
+        axes[idx[0], idx[1]].set_xlabel('Temperature / °C')
         axes[idx[0], idx[1]].set_ylabel('Heat flow / 10$^{-3}$ W')
         axes[idx[0], idx[1]].set_title(title)
         #axes[idx[0], idx[1]].legend(loc='upper left')
@@ -67,65 +67,13 @@ def plot_raw_data(files, data, params):
    
     
     
-def plot_raw_data_old(files, data, params):
-    ''' Plots the raw_data'''
-    
-    print('\n', 15*'*', 'Plotting the raw data', 15*'*')
-     
-    def applyPlotStyle(title, idx):
-        axes[idx[0], idx[1]].set_xlabel('Temperature / degC')
-        axes[idx[0], idx[1]].set_ylabel('Heat capacity / 10$^{-3}$ J K$^{-1}$')
-        axes[idx[0], idx[1]].set_title(title)
-        #axes[idx[0], idx[1]].legend(loc='upper left')
-        
-    fig, axes= plt.subplots(nrows=2, ncols=3, figsize=(16/1.1,9/1.1))
-
-    idx = [0,0]
-    applyPlotStyle('Buffer Heating', idx)
-    for i in files['B_heating']:
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
-        axes[idx[0], idx[1]].legend()
-        
-    idx = [0,1]
-    applyPlotStyle('EC Heating', idx)
-    for i in files['EC_heating']:
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
-        axes[idx[0], idx[1]].legend()
-        
-    idx = [0,2]
-    applyPlotStyle('Sample Heating', idx)
-    for i in files['S_heating']:    
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
-        axes[idx[0], idx[1]].legend()
-
-    idx = [1,0]
-    applyPlotStyle('Buffer Cooling', idx)
-    for i in files['B_cooling']:
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
-        axes[idx[0], idx[1]].legend()
-        
-    idx = [1,1]
-    applyPlotStyle('EC Cooling', idx)
-    for i in files['EC_cooling']:
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
-        axes[idx[0], idx[1]].legend()
-        
-    idx = [1,2]
-    applyPlotStyle('Sample Cooling', idx)
-    for i in files['S_cooling']:    
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i) 
-        axes[idx[0], idx[1]].legend()
-    
-    plt.tight_layout()
-    plt.savefig('Rawdata.pdf')
-    plt.close(fig)  
     
 def plot_corrected_data(files, data, params):
     ''' Plots the corrected data'''
     print('\n', 15*'*', 'Plots the corrected data', 15*'*')
     
     def applyPlotStyle(title, idx, Mw = True):
-        ax.set_xlabel('Temperature / degC')
+        ax.set_xlabel('Temperature / °C')
         ax.set_ylabel('Heat capacity / J K$^{-1}$')
         ax.set_title(title)
         #ax.legend(loc='upper left')
@@ -158,7 +106,7 @@ def plot_final_data(files, data, params):
     print('\n', 15*'*', 'Plots the final data', 15*'*')
     
     def applyPlotStyle(title, idx, Mw = True):
-        ax.set_xlabel('Temperature / degC')
+        ax.set_xlabel('Temperature / °C')
         if Mw:
             ax.set_ylabel('Heat capacity / kJ K$^{-1}$ mol$^{-1}$')
         else:
@@ -202,7 +150,7 @@ def plot_baseline_data(files, data, params):
     print('\n', 15*'*', 'Plots the baseline corrected data', 15*'*')
     
     def applyPlotStyle(title, idx, Mw = True):
-        ax.set_xlabel('Temperature / degC')
+        ax.set_xlabel('Temperature / °C')
         if Mw:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ mol$^{-1}$')
         else:
@@ -239,4 +187,29 @@ def plot_baseline_data(files, data, params):
     
     gs.tight_layout(fig)
     plt.savefig('Baseline_data.pdf')
+    plt.close(fig)
+    
+    
+def plot_alpha(files, data, params):
+    ''' Plots the degree of conversion for all data'''
+    print('\n', 15*'*', 'Plots the degree of conversion for all data', 15*'*')
+    
+    
+        #ax.legend(loc='upper left')
+    fig, ax = plt.subplots() 
+    ax.set_ylabel('α')
+    ax.set_xlabel('Temperature / °C')
+    
+    
+
+    for file in sorted(data):
+        if file in files['S_cooling']:
+            ax.plot(data[file][:,0], 1-data[file][:,4]/data[file][-1,4],  label=file)
+        else:
+            ax.plot(data[file][:,0], data[file][:,4]/data[file][-1,4],  label=file)
+
+    
+    plt.legend()
+
+    plt.savefig('alpha.pdf')
     plt.close(fig)
