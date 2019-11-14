@@ -16,8 +16,8 @@ Edit 2019.11.06: Small bugs corrected.
 Edit 2019.11.13: Added the function plot_alpha, which plots the degree of conversion of all sample runs. Changed degC to °C in plots. 
 """
 
-version = '0.2'
-date = '2019.11.06'
+version = '0.3'
+date = '2019.11.13'
 
 #import numpy as np   #imports numpy
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 

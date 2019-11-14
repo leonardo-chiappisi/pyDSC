@@ -16,12 +16,12 @@ header_cooling = dict() #Dictionary containing the headers of the exported cooli
 
 def write_header(header_heating, header_cooling, files):
     for i in files['S_heating']:
-        filename = os.path.join('Output', 'exp-' + str(i))
+        filename = os.path.join('Output', 'exp-' + str(i) + '.dat')
         with open(filename, 'w+') as f:
             f.write(header_heating[i])
             
     for i in files['S_cooling']:
-        filename = os.path.join('Output', 'exp-' + str(i))
+        filename = os.path.join('Output', 'exp-' + str(i) + '.dat')
         with open(filename, 'w+') as f:
             f.write(header_cooling[i])
             
@@ -374,7 +374,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
         header_heating[key] += '# Peak is located between {} and {} degC. \n'.format(params['ROP_h'][0], params['ROP_h'][1])
     for key in header_cooling:
         header_cooling[key] += '# Data between {} and {} degC were analyzed. \n'.format(params['ROI_c'][0], params['ROI_c'][1])
-        header_cooling[key] += '# Peak is located between{} and {} degC. \n'.format(params['ROP_c'][0], params['ROP_c'][1])
+        header_cooling[key] += '# Peak is located between {} and {} degC. \n'.format(params['ROP_c'][0], params['ROP_c'][1])
         
     if W_counter == 0 and D_counter == 0:
         print('Check performed sucessfully. No errors encountered!')    
@@ -723,7 +723,7 @@ def export_final_data(files, data, params):
     write_header(header_heating, header_cooling, files)
     
     def export(file, data, params):
-        filename = os.path.join('Output', 'exp-' + str(file)) 
+        filename = os.path.join('Output', 'exp-' + str(file) + '.dat') 
         if 'Mw' in params:
             s = 'Temp/ [degC] \t CP-baseline / [J/K/mol] \t CP [J/K/mol] \t baseline [J/K/mol] \t H [J/mol]'
         else:
