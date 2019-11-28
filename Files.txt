@@ -1,6 +1,6 @@
-Sample heating cycles:  	P85_2, P85_4, P85_6
+Sample heating cycles:  	P85_2, P85_4, P85_6 
 Empty cell heating cycles: 	empty_4, empty_6
-Buffer heating cycles:		ww_2, ww_4, ww_6
+Buffer heating cycles:		buffer_heating1, buffer_heating2, buffer_heating3
 Sample cooling cycles: 		P85_3, P85_5, P85_7
 Empty cell cooling cycles: 	empty_3, empty_5, empty_7
-Buffer cooling cycles:		ww_3, ww_5, ww_7
+Buffer cooling cycles:		buffer_cooling1, buffer_cooling2
