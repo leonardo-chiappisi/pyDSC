@@ -133,6 +133,7 @@ def read_params():
               'bins': '', #Size of the bins used to reduce the file size. i.e., a file of length N is reduced to N/bins, whereby bins number of points are averaged. 
               'ROP_h': '',  #region of peak. Region in temperature where the peak is present in the heating runs. 
               'ROP_c': '',   #region of peak. Region in temperature where the peak is present in the cooling runs. 
+              'Encoding': '', #type of encoding of the input Ascii files. 
               'Mw': '', #molar mass of sample, used to normalize the data from J/g to J/mol. 
               'Input': '', #Convention used for the input files, can be exo-up or exo-down. 	
               'Output': ''} #Convention used for output files, can be exo-up or exo-down. 	
@@ -152,6 +153,7 @@ def read_params():
     print('\n')
     
     if isinstance(params['Mw'], str):  del params['Mw'] #removes the Mw element if no Mw is provided in the input data file. 
+    
 
     for key in header_heating:
         header_heating[key] += '# Sample solution mass = {} mg, reference solution mass = {} mg. \n'.format(params['mass_s'][0], params['mass_r'][0])
@@ -189,35 +191,41 @@ def extract_data(files, params, *args, **kwargs):
         for j in files[key]: #the two for loops run over all files defined in the file_input definition file. 
             if j:  #this if sentence is made to avoid trying to read empty key values. 
                 if params['Dataformat'][0] == 'Setaram3':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
+                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
                         hl = 1 #length of the header of the file to be read. 
                         line = inp.readline()
                         while 'Furnace' not in line.split():
                             line = inp.readline()
                             hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding='latin1') #imports all data stored in files
+                            if hl > 500:
+                                raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=params['Encoding'][0]) #imports all data stored in files
                 
                 elif params['Dataformat'][0] == 'Setaram3temptime':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
+                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
                         hl = 1 #length of the header of the file to be read. 
                         line = inp.readline()
                         while 'Furnace' not in line.split():
                             line = inp.readline()
                             hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding='latin1') #imports all data stored in files
+                            if hl > 500:
+                                raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding=params['Encoding'][0]) #imports all data stored in files
                 elif params['Dataformat'][0] == 'Setaram4':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
+                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
                         hl = 1 #length of the header of the file to be read. 
                         line = inp.readline()
                         while 'Furnace' not in line.split():
                             line = inp.readline()
                             hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding='latin1') #imports all data stored in files
+                            if hl > 500:
+                                raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=params['Encoding'][0]) #imports all data stored in files
                     
                 elif params['Dataformat'][0] == '3cols':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
+                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
                         hl = 1 #length of the header of the file to be read. 
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2)) #imports all data stored in files
+                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=params['Encoding'][0]) #imports all data stored in files
                 
 
                 if 'heating' in key:

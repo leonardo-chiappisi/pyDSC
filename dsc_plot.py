@@ -84,7 +84,7 @@ def plot_corrected_data(files, data, params):
     
     N = len(data)
     cols = int(np.ceil(np.sqrt(N)))
-    rows = int(np.ceil(N/cols))
+    rows = int(np.ceil(N/cols)) if cols > 0 else 1
     gs = gridspec.GridSpec(rows, cols)
     
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
@@ -127,7 +127,7 @@ def plot_final_data(files, data, params):
         
     N = len(data)
     cols = int(np.ceil(np.sqrt(N)))
-    rows = int(np.ceil(N/cols))
+    rows = int(np.ceil(N/cols)) if cols > 0 else 1 
     gs = gridspec.GridSpec(rows, cols)
     
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
@@ -173,7 +173,7 @@ def plot_baseline_data(files, data, params):
     
     N = len(data)
     cols = int(np.ceil(np.sqrt(N)))
-    rows = int(np.ceil(N/cols))
+    rows = int(np.ceil(N/cols)) if cols > 0 else 1 
     gs = gridspec.GridSpec(rows, cols)
     
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
