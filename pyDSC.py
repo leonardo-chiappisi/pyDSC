@@ -15,16 +15,15 @@ Edit 2019.10.31: In plot.plot_raw_data the raw heatflow is not plotted.
 Edit 2019.11.06: Small bugs corrected. 
 Edit 2019.11.13: Added the function plot_alpha, which plots the degree of conversion of all sample runs. Changed degC to °C in plots. 
 Edit 2020.01.08: Corrected bug in DSCplot and added encoding option to the input_params file. 
+Edit 2020.02.27: Added Exo-up or Exo-down arrow in the DSC Plots
 """
 
-version = '0.4'
-date = '2020.01.08'
+version = '0.5'
+date = '2020.02.27'
 
-#import numpy as np   #imports numpy
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 
 import dsc_plot as plot
-import numpy as np
-#import matplotlib.pyplot as plt
+
 
 files = dsc.read_files(version,date)  #creates a dictionary which contains all filenames used by the script
 params = dsc.read_params() #reads from the input files the parameters necessary to analyse the data, from the masses to the definiton of the temperature ranges 

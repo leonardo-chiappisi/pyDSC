@@ -16,13 +16,22 @@ def plot_raw_data(files, data, params):
     ''' Plots the raw_data'''
     
     print('\n', 15*'*', 'Plotting the raw data', 15*'*')
-     
+    
     def applyPlotStyle(title, idx):
         axes[idx[0], idx[1]].set_xlabel('Temperature / °C')
         axes[idx[0], idx[1]].set_ylabel('Heat flow / 10$^{-3}$ W')
         axes[idx[0], idx[1]].set_title(title)
         #axes[idx[0], idx[1]].legend(loc='upper left')
-        
+        if params['Exo_in_plot'][0] == 'true':
+            if params['Input'][0] == 'exo-down':
+                axes[idx[0], idx[1]].annotate('Exo-down', xy=(0.1, 0.05), xytext=(0.1, 0.25), xycoords = 'axes fraction',
+                         arrowprops=dict(arrowstyle='->'), 
+                         horizontalalignment='center')
+            if params['Input'][0] == 'exo-up':
+                axes[idx[0], idx[1]].annotate('Exo-up', xy=(0.1, 0.25), xytext=(0.1, 0.05), xycoords = 'axes fraction',
+                         arrowprops=dict(arrowstyle='->'), 
+                         horizontalalignment='center')
+            
     fig, axes= plt.subplots(nrows=2, ncols=3, figsize=(16/1.1,9/1.1))
 
     idx = [0,0]
@@ -61,6 +70,8 @@ def plot_raw_data(files, data, params):
         axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i) 
         axes[idx[0], idx[1]].legend()
     
+
+        
     plt.tight_layout()
     plt.savefig('Rawdata.pdf')
     plt.close(fig)  
@@ -112,6 +123,15 @@ def plot_final_data(files, data, params):
         else:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
+        if params['Exo_in_plot'][0] == 'true':
+            if params['Output'][0] == 'exo-down':
+                ax.annotate('Exo-down', xy=(0.1, 0.05), xytext=(0.1, 0.25), xycoords = 'axes fraction',
+                         arrowprops=dict(arrowstyle='->'), 
+                         horizontalalignment='center')
+            if params['Output'][0] == 'exo-up':
+                ax.annotate('Exo-up', xy=(0.1, 0.25), xytext=(0.1, 0.05), xycoords = 'axes fraction',
+                         arrowprops=dict(arrowstyle='->'), 
+                         horizontalalignment='center')
         #ax.legend(loc='upper left')
     
     

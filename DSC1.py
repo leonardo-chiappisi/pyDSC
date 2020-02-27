@@ -4,9 +4,9 @@ All the functions used by the scripts correction1 are stored in this python file
 File created on december 2018 by Leonardo Chiappisi
 """
 import numpy as np
+#import pandas as pd
 import os
 from math import log
-import matplotlib.pyplot as plt
 from scipy import interpolate, integrate
 from scipy.stats import linregress
 
@@ -136,7 +136,8 @@ def read_params():
               'Encoding': '', #type of encoding of the input Ascii files. 
               'Mw': '', #molar mass of sample, used to normalize the data from J/g to J/mol. 
               'Input': '', #Convention used for the input files, can be exo-up or exo-down. 	
-              'Output': ''} #Convention used for output files, can be exo-up or exo-down. 	
+              'Output': '', #Convention used for output files, can be exo-up or exo-down. 	
+              'Exo_in_plot': ''}  #If True, an arrow indicating the Exo-up or Exo-down convention will be put in the DSC output plots. 
     
     print(15*'*', 'Input Parameters', 15*'*')
     with open('Input_params.txt', 'r') as inp:
@@ -154,6 +155,9 @@ def read_params():
     
     if isinstance(params['Mw'], str):  del params['Mw'] #removes the Mw element if no Mw is provided in the input data file. 
     
+    params['Input'][0] = params['Input'][0].lower() #String is converted in lowcase letters only, to avoid problems with 'Exo-up' or similar
+    params['Output'][0] = params['Output'][0].lower() #String is converted in lowcase letters only, to avoid problems with 'Exo-up' or similar
+    params['Exo_in_plot'][0] = params['Exo_in_plot'][0].lower() #String is converted in lowcase letters only, to avoid problems with 'Exo-up' or similar
 
     for key in header_heating:
         header_heating[key] += '# Sample solution mass = {} mg, reference solution mass = {} mg. \n'.format(params['mass_s'][0], params['mass_r'][0])
@@ -221,6 +225,22 @@ def extract_data(files, params, *args, **kwargs):
                             if hl > 500:
                                 raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
                     tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=params['Encoding'][0]) #imports all data stored in files
+                
+#                elif params['Dataformat'][0] == 'Setaram4_PD':
+#                     with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
+#                        hl = 0 #length of the header of the file to be read. 
+#                        line = inp.readline()
+#                        while 'Furnace' not in line.split():
+#                            line = inp.readline()
+#                            hl += 1
+#                            if hl > 500:
+#                                raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
+#                     print(hl)
+#                     tmp = pd.read_csv(os.path.join('rawdata', str(j)),  encoding=params['Encoding'][0], skip_blank_lines=False, header=hl, sep='\s+')
+#                     for col in tmp.columns: 
+#                         print(col) 
+#                     print(tmp)
+#                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=params['Encoding'][0]) #imports all data stored in files
                     
                 elif params['Dataformat'][0] == '3cols':
                     with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
