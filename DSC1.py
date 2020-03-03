@@ -10,7 +10,7 @@ from math import log
 from scipy import interpolate, integrate
 from scipy.stats import linregress
 
-
+encodings = ['latin1', 'utf-8', 'utf-16']
 header_heating = dict() #Dictionary containing the headers of the exported heating files
 header_cooling = dict() #Dictionary containing the headers of the exported cooling files
 
@@ -195,58 +195,83 @@ def extract_data(files, params, *args, **kwargs):
         for j in files[key]: #the two for loops run over all files defined in the file_input definition file. 
             if j:  #this if sentence is made to avoid trying to read empty key values. 
                 if params['Dataformat'][0] == 'Setaram3':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
-                        hl = 1 #length of the header of the file to be read. 
-                        line = inp.readline()
-                        while 'Furnace' not in line.split():
-                            line = inp.readline()
-                            hl += 1
-                            if hl > 500:
-                                raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=params['Encoding'][0]) #imports all data stored in files
-                
+                    for code in encodings:
+                        try:
+                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                                hl = 1 #length of the header of the file to be read. 
+                                line = inp.readline()
+                                while 'Furnace' not in line.split():
+                                    line = inp.readline()
+                                    hl += 1
+                                    if hl > 500:
+                                        raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
+                            
                 elif params['Dataformat'][0] == 'Setaram3temptime':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
-                        hl = 1 #length of the header of the file to be read. 
-                        line = inp.readline()
-                        while 'Furnace' not in line.split():
-                            line = inp.readline()
-                            hl += 1
-                            if hl > 500:
-                                raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding=params['Encoding'][0]) #imports all data stored in files
-                elif params['Dataformat'][0] == 'Setaram4':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
-                        hl = 1 #length of the header of the file to be read. 
-                        line = inp.readline()
-                        while 'Furnace' not in line.split():
-                            line = inp.readline()
-                            hl += 1
-                            if hl > 500:
-                                raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=params['Encoding'][0]) #imports all data stored in files
+                    for code in encodings:
+                        try:
+                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                                hl = 1 #length of the header of the file to be read. 
+                                line = inp.readline()
+                                while 'Furnace' not in line.split():
+                                    line = inp.readline()
+                                    hl += 1
+                                    if hl > 500:
+                                        raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
                 
-#                elif params['Dataformat'][0] == 'Setaram4_PD':
-#                     with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
-#                        hl = 0 #length of the header of the file to be read. 
-#                        line = inp.readline()
-#                        while 'Furnace' not in line.split():
-#                            line = inp.readline()
-#                            hl += 1
-#                            if hl > 500:
-#                                raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, params['Encoding'][0]))
-#                     print(hl)
-#                     tmp = pd.read_csv(os.path.join('rawdata', str(j)),  encoding=params['Encoding'][0], skip_blank_lines=False, header=hl, sep='\s+')
-#                     for col in tmp.columns: 
-#                         print(col) 
-#                     print(tmp)
-#                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=params['Encoding'][0]) #imports all data stored in files
+                elif params['Dataformat'][0] == 'Setaram4':
+                    for code in encodings:
+                        try:
+                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                                hl = 1 #length of the header of the file to be read. 
+                                line = inp.readline()
+                                while 'Furnace' not in line.split():
+                                    line = inp.readline()
+                                    hl += 1
+                                    if hl > 500:
+                                        raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
                     
                 elif params['Dataformat'][0] == '3cols':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=params['Encoding'][0]) as inp:
-                        hl = 1 #length of the header of the file to be read. 
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=params['Encoding'][0]) #imports all data stored in files
+                    for code in encodings:
+                        try:
+                            hl = 1 #length of the header of the file to be read. 
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
+                    
                 
+                elif params['Dataformat'][0] == 'TA_temp_power_time':
+                    for code in encodings:
+                        try:
+                            hl = 1 #length of the header of the file to be read.
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
+                            
+                    tmp[2,:] /= 1000 #conversion from uWatt into mW 
 
                 if 'heating' in key:
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
@@ -325,7 +350,6 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                     
 #Verification for a constant heatrate and if it is consistent with the one provided in parameter file. 
                 hr, hrstd = data[i][4,:].mean()*60, data[i][4,:].std()*60
-                
                 if 'S_cooling' in key:
                     header_cooling[i] += '# Cooling rate = {:.2f} K/min. \n'.format(-hr)
 
@@ -480,7 +504,7 @@ def correction(data, refs, files, params):
 
     if np.shape(refs['EC_cooling'])[0]:
         tck_EC = interpolate.interp1d(refs['EC_cooling'][1,:], refs['EC_cooling'][2,:], fill_value='extrapolate')
-        if np.shape(refs['B_cooling'])[0]:
+        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb'][0]) > 0.0:
             print('Correcting the Buffer cooling run for the Empty cell cooling run')
             EC_interpol = tck_EC(refs['B_cooling'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
             Buffer_corrected = np.array((refs['B_cooling'][0,:], refs['B_cooling'][1,:], refs['B_cooling'][2,:]-EC_interpol))
@@ -499,7 +523,7 @@ def correction(data, refs, files, params):
                    data_corrected = data[i][2,:] - EC_interpol #corrects the sample data for the empty cell measurement. 
                    data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
     else: #if the empty cell was not measured
-        if np.shape(refs['B_cooling'])[0]: #if buffer was measured
+        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb'][0]) > 0.0: #if buffer was measured
             tck_B = interpolate.interp1d(refs['B_cooling'][1,:], refs['B_cooling'][2,:], fill_value='extrapolate')
             for i in files['S_cooling']:
                 print('Correcting file {} for Buffer measurement'.format(i))
@@ -515,7 +539,7 @@ def correction(data, refs, files, params):
     
     if np.shape(refs['EC_heating'])[0]:
         tck_EC = interpolate.interp1d(refs['EC_heating'][1,:], refs['EC_heating'][2,:], fill_value='extrapolate')
-        if np.shape(refs['B_heating'])[0]:
+        if np.shape(refs['B_heating'])[0] and float(params['mass_bb'][0]) > 0.0:
             print('Correcting the Buffer heating run for the Empty cell heating run')
             EC_interpol = tck_EC(refs['B_heating'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
             Buffer_corrected = np.array((refs['B_heating'][0,:], refs['B_heating'][1,:], refs['B_heating'][2,:]-EC_interpol))
@@ -535,7 +559,7 @@ def correction(data, refs, files, params):
                    data_corrected = data[i][2,:] - EC_interpol #corrects the sample data for the empty cell measurement. 
                    data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
     else: #if the empty cell was not measured
-        if np.shape(refs['B_heating'])[0]: #if buffer was measured
+        if np.shape(refs['B_heating'])[0] and float(params['mass_bb'][0]) > 0.0: #if buffer was measured
             tck_B = interpolate.interp1d(refs['B_heating'][1,:], refs['B_heating'][2,:], fill_value='extrapolate')
             for i in files['S_heating']:
                 print('Correcting file {} for Buffer measurement'.format(i))

@@ -16,10 +16,13 @@ Edit 2019.11.06: Small bugs corrected.
 Edit 2019.11.13: Added the function plot_alpha, which plots the degree of conversion of all sample runs. Changed degC to °C in plots. 
 Edit 2020.01.08: Corrected bug in DSCplot and added encoding option to the input_params file. 
 Edit 2020.02.27: Added Exo-up or Exo-down arrow in the DSC Plots
+Edit 2020.01.03: Included TA_temp_power_time data format
+Edit 2020.01.04: Script automatically tries to read the datafiles using different encodings. The encoding
+                 parameter is not required anymore in the input_params file. Small bugs corrected.  
 """
 
-version = '0.5'
-date = '2020.02.27'
+version = '0.5.2'
+date = '2020.01.04'
 
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 
 import dsc_plot as plot

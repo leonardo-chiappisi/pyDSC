@@ -116,12 +116,18 @@ def plot_final_data(files, data, params):
     ''' Plots the final data'''
     print('\n', 15*'*', 'Plots the final data', 15*'*')
     
-    def applyPlotStyle(title, idx, Mw = True):
+    def applyPlotStyle(title, idx, kJ, Mw = True):
         ax.set_xlabel('Temperature / °C')
         if Mw:
-            ax.set_ylabel('Heat capacity / kJ K$^{-1}$ mol$^{-1}$')
+            if kJ == True:
+                ax.set_ylabel('Heat capacity / kJ K$^{-1}$ mol$^{-1}$')
+            else:
+                ax.set_ylabel('Heat capacity / J K$^{-1}$ mol$^{-1}$')
         else:
-            ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
+            if kJ == True:
+                ax.set_ylabel('Heat capacity / kJ K$^{-1}$ g$^{-1}$')
+            else:
+                ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
         if params['Exo_in_plot'][0] == 'true':
             if params['Output'][0] == 'exo-down':
@@ -135,13 +141,21 @@ def plot_final_data(files, data, params):
         #ax.legend(loc='upper left')
     
     
-    def plot(ax, data, file, Mw = True):
+    def plot(ax, data, file, kJ, Mw = True):
         if Mw:
-            ax.plot(data[file][:,0], data[file][:,1]/1e3)
-            ax.annotate('DH = {:0.3g} kJ/mol'.format(data[file][-1,4]/1e3), xy=(0.65, 0.15), xycoords='axes fraction')
+            if kJ:
+                ax.plot(data[file][:,0], data[file][:,1]/1e3)
+                ax.annotate('DH = {:0.3g} kJ/mol'.format(data[file][-1,4]/1e3), xy=(0.65, 0.15), xycoords='axes fraction')
+            else:
+                ax.plot(data[file][:,0], data[file][:,1])
+                ax.annotate('DH = {:0.3g} J/mol'.format(data[file][-1,4]), xy=(0.65, 0.15), xycoords='axes fraction')
         else:
-            ax.plot(data[file][:,0], data[file][:,1])
-            ax.annotate('DH = {:0.3g} J/g'.format(data[file][-1,4]), xy=(0.70, 0.15), xycoords='axes fraction')
+            if kJ:
+                ax.plot(data[file][:,0], data[file][:,1]/1e3)
+                ax.annotate('DH = {:0.3g} kJ/g'.format(data[file][-1,4]/1e3), xy=(0.70, 0.15), xycoords='axes fraction')
+            else:
+                ax.plot(data[file][:,0], data[file][:,1])
+                ax.annotate('DH = {:0.3g} J/g'.format(data[file][-1,4]), xy=(0.70, 0.15), xycoords='axes fraction')
         #ax.annotate('{}'.format(params['Output'][0]), xy=(0.80, 0.05), xycoords='axes fraction')
         #ax.arrow( 0.1, 0.1, 0.0, 0.2, fc="k", ec="k", head_width=0.05, head_length=0.1, xycoords='axes fraction' )
         
@@ -155,8 +169,9 @@ def plot_final_data(files, data, params):
     i = 0
     for file in sorted(data):
         ax = fig.add_subplot(gs[i])
-        applyPlotStyle(file, ax, Mw = 'Mw' in params)
-        plot(ax, data, file, Mw = 'Mw' in params)
+        kJ = max(abs(data[file][:,1])) > 1000 #if the maximum of the data is larger than 1000 J/g or J/mol, data are plotted in kJ/g or kJ/mol. 
+        applyPlotStyle(file, ax, kJ, Mw = 'Mw' in params)
+        plot(ax, data, file, kJ, Mw = 'Mw' in params)
         i+= 1
     
     gs.tight_layout(fig)
