@@ -10,7 +10,7 @@ from math import log
 from scipy import interpolate, integrate
 from scipy.stats import linregress
 
-encodings = ['latin1', 'utf-8', 'utf-16']
+encodings = [ 'utf-8', 'utf-16', 'latin1']
 header_heating = dict() #Dictionary containing the headers of the exported heating files
 header_cooling = dict() #Dictionary containing the headers of the exported cooling files
 
@@ -86,7 +86,7 @@ def read_files(version, date):
         sh += '# Heating curves were corrected by buffer-buffer experiments {}'.format(files['B_heating'])
     if len(files['B_heating']) == 0 and len(files['EC_heating']) > 0:
         print('Heating curves will be corrected by empty cell experiments. \n')
-        sh += '# Heating curves were corrected by empty cell {} experiments {}'.format(files['EC_heating'])
+        sh += '# Heating curves were corrected by empty cell {} experiments \n'.format(files['EC_heating'])
     if len(files['B_heating']) == 0 and len(files['EC_heating']) == 0:
         print('Heating curves will not be corrected with reference measurements. \n')
         sh += '# Heating curves were not corrected with reference measurements. \n'
@@ -137,7 +137,12 @@ def read_params():
               'Mw': '', #molar mass of sample, used to normalize the data from J/g to J/mol. 
               'Input': '', #Convention used for the input files, can be exo-up or exo-down. 	
               'Output': '', #Convention used for output files, can be exo-up or exo-down. 	
-              'Exo_in_plot': ''}  #If True, an arrow indicating the Exo-up or Exo-down convention will be put in the DSC output plots. 
+              'Exo_in_plot': '',#If True, an arrow indicating the Exo-up or Exo-down convention will be put in the DSC output plots. 
+              'Header_length': '',#length of the header, to be specified if 3cols_variable_header or 4cols_variable_header dataformat parameters are used. 
+              'unit_time': 'min'	,	#Unit in which the time is given, can be either min or s
+              'unit_temp': 'degC',		#Unit in which the temperature is given, can be K or degC
+              'unit_power': 'mW'		#Unit in which the heatflow is given, can be uW (microWatt), mW (milliWatt), or W (Watt)
+              }  
     
     print(15*'*', 'Input Parameters', 15*'*')
     with open('Input_params.txt', 'r') as inp:
@@ -257,8 +262,37 @@ def extract_data(files, params, *args, **kwargs):
                             break
                         except:
                             None
-#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
-                    
+                            
+                elif params['Dataformat'][0] == '3cols_variable_header':
+                    for code in encodings:
+                        try:
+                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+                            
+                elif params['Dataformat'][0] == '3cols_variable_header_temp_power_time':
+                    for code in encodings:
+                        try:
+                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+                            
+                elif params['Dataformat'][0] == '4cols_variable_header':
+                    for code in encodings:
+                        try:
+                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))                    
                 
                 elif params['Dataformat'][0] == 'TA_temp_power_time':
                     for code in encodings:
@@ -277,11 +311,25 @@ def extract_data(files, params, *args, **kwargs):
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
                 elif 'cooling' in key:
                     mask = ((float(params['ROI_c'][0]) < tmp[1,:]) & (float(params['ROI_c'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
-                tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer. 
-                data_set = binning(tmp2, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
+                tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer.                 
+                print(tmp2)
                 
                 if params['Input'][0] != params['Output'][0]: #renormalized from exo-up to exo-down convention, or viceversa. 
-                    data_set[2,:] *= -1
+                    tmp2[2,:] *= -1
+                
+                if params['unit_time'][0] == 'min': #Converts time from minutes to seconds
+                    tmp2[0,:] *= 60
+                
+                if params['unit_power'][0] == 'uW': #Converts the heatflow from uW into mW
+                    tmp2[2,:] /= 1000
+                    
+                if params['unit_power'][0] == 'W': #Converts the heatflow from W into mW
+                    tmp2[2,:] *= 1000
+
+        
+                data_set = binning(tmp2, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
+                
+                
             
             data[j] = data_set
             dataraw[j] = tmp2
@@ -326,6 +374,7 @@ def check_data(data, files, params):
 #veryfies that the heating files are really a heating file. If not, program stops.             
             if 'heating' in key:
                 if (data[i][1,1] > data[i][1,-1]): 
+                    print(data[i][1,1], data[i][1,-1])
                     raise Exception('Error: {} is not a heating file!'.format(i))
 #Verification for a constant heatrate and if it is consistent with the one provided in parameter file. 
                 hr, hrstd = data[i][4,:].mean()*60, data[i][4,:].std()*60
@@ -372,6 +421,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                 if minT-1.0 > float(params['ROI_c'][0]) or maxT+1.0 < float(params['ROI_c'][1]):
                     D_counter += 1
                     print('Error: temperature range of file {} does not cover the region of interest!'.format(i))
+                    print('Requested range is {} -- {}. File covers range {} -- {}.'.format(float(params['ROI_c'][0]), float(params['ROI_c'][1]), minT, maxT))
                     print('File {} will be ignored in all successive calculations.'.format(i))
                     del data[i]
                     files[key].remove(i)
@@ -379,6 +429,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                 if minT-1.0 > float(params['ROI_h'][0]) or maxT+1.0 < float(params['ROI_h'][1]):
                     D_counter += 1
                     print('Error: temperature range of file {} does not cover the region of interest!'.format(i))
+                    print('Requested range is {} -- {}. File covers range {} -- {}.'.format(float(params['ROI_h'][0]), float(params['ROI_h'][1]), minT, maxT))
                     print('File {} will be ignored in all successive calculations.'.format(i))
                     del data[i]
                     files[key].remove(i)
