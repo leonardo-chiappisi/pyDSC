@@ -10,59 +10,73 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import numpy as np
 
+plt.rcParams['text.usetex'] = False
 
 def plot_raw_data(files, data, params):
     ''' Plots the raw_data'''
     
     print('\n', 15*'*', 'Plotting the raw data', 15*'*')
-     
+    
     def applyPlotStyle(title, idx):
-        axes[idx[0], idx[1]].set_xlabel('Temperature / degC')
-        axes[idx[0], idx[1]].set_ylabel('Heat capacity / 10$^{-3}$ J K$^{-1}$')
+        axes[idx[0], idx[1]].set_xlabel('Temperature / °C')
+        axes[idx[0], idx[1]].set_ylabel('Heat flow / 10$^{-3}$ W')
         axes[idx[0], idx[1]].set_title(title)
         #axes[idx[0], idx[1]].legend(loc='upper left')
-        
+        if params['Exo_in_plot'][0] == 'true':
+            if params['Output'][0] == 'exo-down':
+                axes[idx[0], idx[1]].annotate('Exo-down', xy=(0.1, 0.05), xytext=(0.1, 0.25), xycoords = 'axes fraction',
+                         arrowprops=dict(arrowstyle='->'), 
+                         horizontalalignment='center')
+            if params['Output'][0] == 'exo-up':
+                axes[idx[0], idx[1]].annotate('Exo-up', xy=(0.1, 0.25), xytext=(0.1, 0.05), xycoords = 'axes fraction',
+                         arrowprops=dict(arrowstyle='->'), 
+                         horizontalalignment='center')
+            
     fig, axes= plt.subplots(nrows=2, ncols=3, figsize=(16/1.1,9/1.1))
 
     idx = [0,0]
     applyPlotStyle('Buffer Heating', idx)
     for i in files['B_heating']:
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
         axes[idx[0], idx[1]].legend()
         
     idx = [0,1]
     applyPlotStyle('EC Heating', idx)
     for i in files['EC_heating']:
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
         axes[idx[0], idx[1]].legend()
         
     idx = [0,2]
     applyPlotStyle('Sample Heating', idx)
     for i in files['S_heating']:    
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
         axes[idx[0], idx[1]].legend()
 
     idx = [1,0]
     applyPlotStyle('Buffer Cooling', idx)
     for i in files['B_cooling']:
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
         axes[idx[0], idx[1]].legend()
         
     idx = [1,1]
     applyPlotStyle('EC Cooling', idx)
     for i in files['EC_cooling']:
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i)
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i)
         axes[idx[0], idx[1]].legend()
         
     idx = [1,2]
     applyPlotStyle('Sample Cooling', idx)
     for i in files['S_cooling']:    
-        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:]/np.average(data[i][4,:]), label=i) 
+        axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i) 
         axes[idx[0], idx[1]].legend()
     
+
+        
     plt.tight_layout()
     plt.savefig('Rawdata.pdf')
     plt.close(fig)  
+   
+    
     
     
 def plot_corrected_data(files, data, params):
@@ -70,7 +84,7 @@ def plot_corrected_data(files, data, params):
     print('\n', 15*'*', 'Plots the corrected data', 15*'*')
     
     def applyPlotStyle(title, idx, Mw = True):
-        ax.set_xlabel('Temperature / degC')
+        ax.set_xlabel('Temperature / °C')
         ax.set_ylabel('Heat capacity / J K$^{-1}$')
         ax.set_title(title)
         #ax.legend(loc='upper left')
@@ -81,7 +95,7 @@ def plot_corrected_data(files, data, params):
     
     N = len(data)
     cols = int(np.ceil(np.sqrt(N)))
-    rows = int(np.ceil(N/cols))
+    rows = int(np.ceil(N/cols)) if cols > 0 else 1
     gs = gridspec.GridSpec(rows, cols)
     
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
@@ -102,26 +116,52 @@ def plot_final_data(files, data, params):
     ''' Plots the final data'''
     print('\n', 15*'*', 'Plots the final data', 15*'*')
     
-    def applyPlotStyle(title, idx, Mw = True):
-        ax.set_xlabel('Temperature / degC')
+    def applyPlotStyle(title, idx, kJ, Mw = True):
+        ax.set_xlabel('Temperature / °C')
         if Mw:
-            ax.set_ylabel('Heat capacity / J K$^{-1}$ mol$^{-1}$')
+            if kJ == True:
+                ax.set_ylabel('Heat capacity / kJ K$^{-1}$ mol$^{-1}$')
+            else:
+                ax.set_ylabel('Heat capacity / J K$^{-1}$ mol$^{-1}$')
         else:
-            ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
+            if kJ == True:
+                ax.set_ylabel('Heat capacity / kJ K$^{-1}$ g$^{-1}$')
+            else:
+                ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
+        if params['Exo_in_plot'][0] == 'true':
+            if params['Output'][0] == 'exo-down':
+                ax.annotate('Exo-down', xy=(0.1, 0.05), xytext=(0.1, 0.25), xycoords = 'axes fraction',
+                         arrowprops=dict(arrowstyle='->'), 
+                         horizontalalignment='center')
+            if params['Output'][0] == 'exo-up':
+                ax.annotate('Exo-up', xy=(0.1, 0.25), xytext=(0.1, 0.05), xycoords = 'axes fraction',
+                         arrowprops=dict(arrowstyle='->'), 
+                         horizontalalignment='center')
         #ax.legend(loc='upper left')
     
     
-    def plot(ax, data, file, Mw = True):
-        ax.plot(data[file][:,0], data[file][:,1])
+    def plot(ax, data, file, kJ, Mw = True):
         if Mw:
-            ax.annotate('DH = {:1.0f} J/mol'.format(data[file][-1,4]), xy=(0.05, 0.05), xycoords='axes fraction')
+            if kJ:
+                ax.plot(data[file][:,0], data[file][:,1]/1e3)
+                ax.annotate('DH = {:0.3g} kJ/mol'.format(data[file][-1,4]/1e3), xy=(0.65, 0.15), xycoords='axes fraction')
+            else:
+                ax.plot(data[file][:,0], data[file][:,1])
+                ax.annotate('DH = {:0.3g} J/mol'.format(data[file][-1,4]), xy=(0.65, 0.15), xycoords='axes fraction')
         else:
-            ax.annotate('DH = {:1.1f} J/g'.format(data[file][-1,4]), xy=(0.05, 0.05), xycoords='axes fraction')
-    
+            if kJ:
+                ax.plot(data[file][:,0], data[file][:,1]/1e3)
+                ax.annotate('DH = {:0.3g} kJ/g'.format(data[file][-1,4]/1e3), xy=(0.70, 0.15), xycoords='axes fraction')
+            else:
+                ax.plot(data[file][:,0], data[file][:,1])
+                ax.annotate('DH = {:0.3g} J/g'.format(data[file][-1,4]), xy=(0.70, 0.15), xycoords='axes fraction')
+        #ax.annotate('{}'.format(params['Output'][0]), xy=(0.80, 0.05), xycoords='axes fraction')
+        #ax.arrow( 0.1, 0.1, 0.0, 0.2, fc="k", ec="k", head_width=0.05, head_length=0.1, xycoords='axes fraction' )
+        
     N = len(data)
     cols = int(np.ceil(np.sqrt(N)))
-    rows = int(np.ceil(N/cols))
+    rows = int(np.ceil(N/cols)) if cols > 0 else 1 
     gs = gridspec.GridSpec(rows, cols)
     
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
@@ -129,8 +169,9 @@ def plot_final_data(files, data, params):
     i = 0
     for file in sorted(data):
         ax = fig.add_subplot(gs[i])
-        applyPlotStyle(file, ax, Mw = 'Mw' in params)
-        plot(ax, data, file, Mw = 'Mw' in params)
+        kJ = max(abs(data[file][:,1])) > 1000 #if the maximum of the data is larger than 1000 J/g or J/mol, data are plotted in kJ/g or kJ/mol. 
+        applyPlotStyle(file, ax, kJ, Mw = 'Mw' in params)
+        plot(ax, data, file, kJ, Mw = 'Mw' in params)
         i+= 1
     
     gs.tight_layout(fig)
@@ -144,7 +185,7 @@ def plot_baseline_data(files, data, params):
     print('\n', 15*'*', 'Plots the baseline corrected data', 15*'*')
     
     def applyPlotStyle(title, idx, Mw = True):
-        ax.set_xlabel('Temperature / degC')
+        ax.set_xlabel('Temperature / °C')
         if Mw:
             ax.set_ylabel('Heat capacity / J K$^{-1}$ mol$^{-1}$')
         else:
@@ -167,7 +208,7 @@ def plot_baseline_data(files, data, params):
     
     N = len(data)
     cols = int(np.ceil(np.sqrt(N)))
-    rows = int(np.ceil(N/cols))
+    rows = int(np.ceil(N/cols)) if cols > 0 else 1 
     gs = gridspec.GridSpec(rows, cols)
     
     fig = plt.figure(figsize=(cols*4.5, rows*4.5))
@@ -181,4 +222,29 @@ def plot_baseline_data(files, data, params):
     
     gs.tight_layout(fig)
     plt.savefig('Baseline_data.pdf')
+    plt.close(fig)
+    
+    
+def plot_alpha(files, data, params):
+    ''' Plots the degree of conversion for all data'''
+    print('\n', 15*'*', 'Plots the degree of conversion for all data', 15*'*')
+    
+    
+        #ax.legend(loc='upper left')
+    fig, ax = plt.subplots() 
+    ax.set_ylabel('α')
+    ax.set_xlabel('Temperature / °C')
+    
+    
+
+    for file in sorted(data):
+        if file in files['S_cooling']:
+            ax.plot(data[file][:,0], 1-data[file][:,4]/data[file][-1,4],  label=file)
+        else:
+            ax.plot(data[file][:,0], data[file][:,4]/data[file][-1,4],  label=file)
+
+    
+    plt.legend()
+
+    plt.savefig('alpha.pdf')
     plt.close(fig)

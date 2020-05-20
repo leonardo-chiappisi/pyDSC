@@ -4,21 +4,30 @@ All the functions used by the scripts correction1 are stored in this python file
 File created on december 2018 by Leonardo Chiappisi
 """
 import numpy as np
+#import pandas as pd
 import os
-import matplotlib.pyplot as plt
+from math import log
 from scipy import interpolate, integrate
 from scipy.stats import linregress
-#from matplotlib import rc
 
-#import warnings
+encodings = [ 'utf-8', 'utf-16', 'latin1']
+header_heating = dict() #Dictionary containing the headers of the exported heating files
+header_cooling = dict() #Dictionary containing the headers of the exported cooling files
 
-#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-## for Palatino and other serif fonts use:
-#rc('font',**{'family':'serif','serif':['Palatino']})
-#rc('text', usetex=True)
+def write_header(header_heating, header_cooling, files):
+    for i in files['S_heating']:
+        filename = os.path.join('Output', 'exp-' + str(i) + '.dat')
+        with open(filename, 'w+') as f:
+            f.write(header_heating[i])
+            
+    for i in files['S_cooling']:
+        filename = os.path.join('Output', 'exp-' + str(i) + '.dat')
+        with open(filename, 'w+') as f:
+            f.write(header_cooling[i])
+            
+    return None
 
-
-def read_files():
+def read_files(version, date):
     ''' Function which imports all needed data: heating and cooling cycles as well as correction files: 
     Buffer-buffer thermograms and empty cell corrections. The name of the files are stored in the input file 'input.txt'. 
     '''
@@ -55,28 +64,55 @@ def read_files():
                                                         len(files['S_cooling']), files['S_cooling'],
                                                         len(files['EC_cooling']), files['EC_cooling'],
                                                         len(files['B_cooling']), files['B_cooling'])
+        
+    
+    #Creating output data files with first informations. 
+    sc = '# Data threated with pyDSC, version {} from {}. \n'.format(version, date) #heading for heating curves
+    sh = '# Data threated with pyDSC, version {} from {}. \n'.format(version, date) #heading for heating curves
+    sc += 50*'#' + '\n'
+    sh += 50*'#' + '\n'
+
+
+    
     print(15*'*', 'DATA INPUT', 15*'*')
     print(s, '\n')
     
     print(15*'*', 'DATA Correction', 15*'*')
     if len(files['B_heating']) > 0 and len(files['EC_heating']) > 0:
-        print('Heating curves will be corrected by empty cell and buffer-buffer experiments')
+        print('Heating curves will be corrected by empty cell and buffer-buffer experiments. \n')
+        sh += '# Heating curves were corrected by empty cell {} and buffer-buffer experiments {}. \n'.format(files['EC_heating'], files['B_heating'])
     if len(files['B_heating']) > 0 and len(files['EC_heating']) == 0:
         print('Heating curves will be corrected by buffer-buffer experiments')
+        sh += '# Heating curves were corrected by buffer-buffer experiments {}'.format(files['B_heating'])
     if len(files['B_heating']) == 0 and len(files['EC_heating']) > 0:
-        print('Heating curves will be corrected by empty cell experiments')
+        print('Heating curves will be corrected by empty cell experiments. \n')
+        sh += '# Heating curves were corrected by empty cell {} experiments \n'.format(files['EC_heating'])
     if len(files['B_heating']) == 0 and len(files['EC_heating']) == 0:
-        print('Heating curves will not be corrected with reference measurements')
+        print('Heating curves will not be corrected with reference measurements. \n')
+        sh += '# Heating curves were not corrected with reference measurements. \n'
     if len(files['B_cooling']) > 0 and len(files['EC_cooling']) > 0:
         print('Cooling curves will be corrected by empty cell and buffer-buffer experiments')
+        sc += '# Cooling curves were corrected by empty cell {} and buffer-buffer experiments {}. \n'.format(files['EC_cooling'], files['B_cooling'])
     if len(files['B_cooling']) > 0 and len(files['EC_cooling']) == 0:
         print('Cooling curves will be corrected by buffer-buffer experiments')
+        sc += '# Cooling curves were corrected by buffer-buffer experiments {}. \n'.format(files['B_cooling'])
     if len(files['B_cooling']) == 0 and len(files['EC_cooling']) > 0:
         print('Cooling curves will be corrected by empty cell experiments')
+        sc += '# Cooling curves were corrected by empty cell {} experiments. \n'.format(files['EC_cooling'])
     if len(files['B_cooling']) == 0 and len(files['EC_cooling']) == 0:
         print('Cooling curves will not be corrected with reference measurements')
+        sc += '# Cooling curves were not corrected with reference measurements. \n'
     
     print('\n')
+    
+    for key in files:
+        if 'S_heating' in key:
+            for file in files[key]:
+                header_heating[file] = sh
+        if 'S_cooling' in key:
+            for file in files[key]:
+                header_cooling[file] = sc
+    
     return files
 
 
@@ -97,7 +133,16 @@ def read_params():
               'bins': '', #Size of the bins used to reduce the file size. i.e., a file of length N is reduced to N/bins, whereby bins number of points are averaged. 
               'ROP_h': '',  #region of peak. Region in temperature where the peak is present in the heating runs. 
               'ROP_c': '',   #region of peak. Region in temperature where the peak is present in the cooling runs. 
-              'Mw': ''} #molar mass of sample, used to normalize the data from J/g to J/mol. 
+              'Encoding': '', #type of encoding of the input Ascii files. 
+              'Mw': '', #molar mass of sample, used to normalize the data from J/g to J/mol. 
+              'Input': '', #Convention used for the input files, can be exo-up or exo-down. 	
+              'Output': '', #Convention used for output files, can be exo-up or exo-down. 	
+              'Exo_in_plot': '',#If True, an arrow indicating the Exo-up or Exo-down convention will be put in the DSC output plots. 
+              'Header_length': '',#length of the header, to be specified if 3cols_variable_header or 4cols_variable_header dataformat parameters are used. 
+              'unit_time': 'min'	,	#Unit in which the time is given, can be either min or s
+              'unit_temp': 'degC',		#Unit in which the temperature is given, can be K or degC
+              'unit_power': 'mW'		#Unit in which the heatflow is given, can be uW (microWatt), mW (milliWatt), or W (Watt)
+              }  
     
     print(15*'*', 'Input Parameters', 15*'*')
     with open('Input_params.txt', 'r') as inp:
@@ -112,9 +157,28 @@ def read_params():
                         s = 'Input parameter {} read correctly as {}'.format(key, params[key])
                         print(s)
     print('\n')
-
-
+    
     if isinstance(params['Mw'], str):  del params['Mw'] #removes the Mw element if no Mw is provided in the input data file. 
+    
+    params['Input'][0] = params['Input'][0].lower() #String is converted in lowcase letters only, to avoid problems with 'Exo-up' or similar
+    params['Output'][0] = params['Output'][0].lower() #String is converted in lowcase letters only, to avoid problems with 'Exo-up' or similar
+    params['Exo_in_plot'][0] = params['Exo_in_plot'][0].lower() #String is converted in lowcase letters only, to avoid problems with 'Exo-up' or similar
+
+    for key in header_heating:
+        header_heating[key] += '# Sample solution mass = {} mg, reference solution mass = {} mg. \n'.format(params['mass_s'][0], params['mass_r'][0])
+        if 'Mw' in params: 
+            header_heating[key] += '# Sample contains {:.3g} mg of sample, corresponding to a concentration of {:.2f} wt% and {:.3g} mol/kg. \n'.format(float(params['mass_s'][0])*float(params['s_wt'][0]), float(params['s_wt'][0])*100, float(params['mass_s'][0])*float(params['s_wt'][0])/float(params['mass_s'][0])/float(params['Mw'][0])*1000)
+        else:
+            header_heating[key] += '# Sample contains {:.2f} mg of sample, corresponding to a concentration of {:.2f} wt%. \n'.format(float(params['mass_s'][0])*float(params['s_wt'][0]), float(params['s_wt'][0])*100)
+        header_heating[key] += '# Data were provided in the {} convention and are exported in the {} convention. \n'.format(params['Input'][0], params['Output'][0])
+    for key in header_cooling:
+        header_cooling[key] += '# Sample solution mass = {} mg, reference solution mass = {} mg. \n'.format(params['mass_s'][0], params['mass_r'][0])
+        if 'Mw' in params: 
+            header_cooling[key] += '# Sample contains {:.3g} mg of sample, corresponding to a concentration of {:.2f} wt% and {:.3g} mol/kg. \n'.format(float(params['mass_s'][0])*float(params['s_wt'][0]), float(params['s_wt'][0])*100, float(params['mass_s'][0])*float(params['s_wt'][0])/float(params['mass_s'][0])/float(params['Mw'][0])*1000)
+        else:
+            header_cooling[key] += '# Sample contains {:.3g} mg of sample, corresponding to a concentration of {:.2f} wt%. \n'.format(float(params['mass_s'][0])*float(params['s_wt'][0]), float(params['s_wt'][0])*100)
+        header_cooling[key] += '# Data were provided in the {} convention and are exported in the {} convention. \n'.format(params['Input'][0], params['Output'][0])
+        
     return params
 
 
@@ -126,56 +190,153 @@ def extract_data(files, params, *args, **kwargs):
     setaram3--> time, temperature, heatflow in addition of header of variable length. Beginning of data identifies by the word Furnace
     At the end, all files will be saves as time, temperature, heatflow. If the time information is not given, the first column will be filled with zeros.
     
-    All file definitions are given in the readme file. TODO
+    All file definitions are given in the readme file.
     Availabe data formats are: Setaram3, Setaram4, 3cols, Setaram3temptime
     '''
     print(15*'*', 'Reading data files', 15*'*')
     data = {} #Creation of empty dictionary, where the datasets will be stored, indexed by their filename. 
+    dataraw = {} #Creation of empty dictionary, where the datasets will be stored, indexed by their filename. 
     for key in files: 
         for j in files[key]: #the two for loops run over all files defined in the file_input definition file. 
             if j:  #this if sentence is made to avoid trying to read empty key values. 
                 if params['Dataformat'][0] == 'Setaram3':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
-                        hl = 1 #length of the header of the file to be read. 
-                        line = inp.readline()
-                        while 'Furnace' not in line.split():
-                            line = inp.readline()
-                            hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding='latin1') #imports all data stored in files
+                    for code in encodings:
+                        try:
+                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                                hl = 1 #length of the header of the file to be read. 
+                                line = inp.readline()
+                                while 'Furnace' not in line.split():
+                                    line = inp.readline()
+                                    hl += 1
+                                    if hl > 500:
+                                        raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
+                            
+                elif params['Dataformat'][0] == 'Setaram3temptime':
+                    for code in encodings:
+                        try:
+                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                                hl = 1 #length of the header of the file to be read. 
+                                line = inp.readline()
+                                while 'Furnace' not in line.split():
+                                    line = inp.readline()
+                                    hl += 1
+                                    if hl > 500:
+                                        raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
                 
-                if params['Dataformat'][0] == 'Setaram3temptime':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
-                        hl = 1 #length of the header of the file to be read. 
-                        line = inp.readline()
-                        while 'Furnace' not in line.split():
-                            line = inp.readline()
-                            hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding='latin1') #imports all data stored in files
                 elif params['Dataformat'][0] == 'Setaram4':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
-                        hl = 1 #length of the header of the file to be read. 
-                        line = inp.readline()
-                        while 'Furnace' not in line.split():
-                            line = inp.readline()
-                            hl += 1
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding='latin1') #imports all data stored in files
+                    for code in encodings:
+                        try:
+                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                                hl = 1 #length of the header of the file to be read. 
+                                line = inp.readline()
+                                while 'Furnace' not in line.split():
+                                    line = inp.readline()
+                                    hl += 1
+                                    if hl > 500:
+                                        raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
                     
                 elif params['Dataformat'][0] == '3cols':
-                    with open(os.path.join('rawdata', str(j)), 'r', errors='replace') as inp:
-                        hl = 1 #length of the header of the file to be read. 
-                    tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2)) #imports all data stored in files
+                    for code in encodings:
+                        try:
+                            hl = 1 #length of the header of the file to be read. 
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+                            
+                elif params['Dataformat'][0] == '3cols_variable_header':
+                    for code in encodings:
+                        try:
+                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+                            
+                elif params['Dataformat'][0] == '3cols_variable_header_temp_power_time':
+                    for code in encodings:
+                        try:
+                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+                            
+                elif params['Dataformat'][0] == '4cols_variable_header':
+                    for code in encodings:
+                        try:
+                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))                    
                 
+                elif params['Dataformat'][0] == 'TA_temp_power_time':
+                    for code in encodings:
+                        try:
+                            hl = 1 #length of the header of the file to be read.
+                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
+                            print('File {} opened with {} encoding.'.format(str(j), code))
+                            break
+                        except:
+                            None
+#                            print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
+                            
+                    tmp[2,:] /= 1000 #conversion from uWatt into mW 
 
                 if 'heating' in key:
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
                 elif 'cooling' in key:
                     mask = ((float(params['ROI_c'][0]) < tmp[1,:]) & (float(params['ROI_c'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
-                tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer. 
+                tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer.                 
+                print(tmp2)
+                
+                if params['Input'][0] != params['Output'][0]: #renormalized from exo-up to exo-down convention, or viceversa. 
+                    tmp2[2,:] *= -1
+                
+                if params['unit_time'][0] == 'min': #Converts time from minutes to seconds
+                    tmp2[0,:] *= 60
+                
+                if params['unit_power'][0] == 'uW': #Converts the heatflow from uW into mW
+                    tmp2[2,:] /= 1000
+                    
+                if params['unit_power'][0] == 'W': #Converts the heatflow from W into mW
+                    tmp2[2,:] *= 1000
+
+        
                 data_set = binning(tmp2, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
+                
+                
+            
             data[j] = data_set
+            dataraw[j] = tmp2
+            
             print('Datafile {} read correctly'.format(j))
     print('\n')
-    return data #a dictionary containing all data, already cut, binned, and with the heatrate calculated. 
+    return data, dataraw #a dictionary containing all data, already cut, binned, and with the heatrate calculated. 
 
 
 def binning(data, params):
@@ -206,15 +367,20 @@ def check_data(data, files, params):
     W_counter = 0 #counts warnings
     D_counter = 0 #counts number of rejected files
     
+
     
     for key in files:  
         for i in files[key]:
 #veryfies that the heating files are really a heating file. If not, program stops.             
             if 'heating' in key:
                 if (data[i][1,1] > data[i][1,-1]): 
+                    print(data[i][1,1], data[i][1,-1])
                     raise Exception('Error: {} is not a heating file!'.format(i))
 #Verification for a constant heatrate and if it is consistent with the one provided in parameter file. 
                 hr, hrstd = data[i][4,:].mean()*60, data[i][4,:].std()*60
+                if 'S_heating' in key:
+                 header_heating[i] += '# Heating rate = {:.2f} K/min. \n'.format(hr)
+                
                 if hrstd/hr > 0.02:
                     W_counter += 1
                     print('Warning {}: the heatrate is not constant and varies by {:.2g}% for file {}.'.format(W_counter, hrstd/hr*100, i))
@@ -233,6 +399,9 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                     
 #Verification for a constant heatrate and if it is consistent with the one provided in parameter file. 
                 hr, hrstd = data[i][4,:].mean()*60, data[i][4,:].std()*60
+                if 'S_cooling' in key:
+                    header_cooling[i] += '# Cooling rate = {:.2f} K/min. \n'.format(-hr)
+
                 if hrstd/hr > 0.02:
                     W_counter += 1
                     print('Warning {}: the heatrate is not constant and varies by {:.2g}% for file {}.'.format(W_counter, hrstd/hr*100, i))
@@ -252,6 +421,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                 if minT-1.0 > float(params['ROI_c'][0]) or maxT+1.0 < float(params['ROI_c'][1]):
                     D_counter += 1
                     print('Error: temperature range of file {} does not cover the region of interest!'.format(i))
+                    print('Requested range is {} -- {}. File covers range {} -- {}.'.format(float(params['ROI_c'][0]), float(params['ROI_c'][1]), minT, maxT))
                     print('File {} will be ignored in all successive calculations.'.format(i))
                     del data[i]
                     files[key].remove(i)
@@ -259,6 +429,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                 if minT-1.0 > float(params['ROI_h'][0]) or maxT+1.0 < float(params['ROI_h'][1]):
                     D_counter += 1
                     print('Error: temperature range of file {} does not cover the region of interest!'.format(i))
+                    print('Requested range is {} -- {}. File covers range {} -- {}.'.format(float(params['ROI_h'][0]), float(params['ROI_h'][1]), minT, maxT))
                     print('File {} will be ignored in all successive calculations.'.format(i))
                     del data[i]
                     files[key].remove(i)
@@ -296,17 +467,25 @@ and is not consistent with the one provided in the input parameter file of {:.2g
             raise Exception('Cooling run lengths differ by more than 5% to be threated at the same time. Evaluate if analysing them separately.') 
 
 #Checks that the peak is defined within the region of interest
-    if params['ROP_h'][0] <  params['ROI_h'][0] or params['ROP_h'][1] >  params['ROI_h'][1]:
+    if float(params['ROP_h'][0]) < float(params['ROI_h'][0]) or float(params['ROP_h'][1]) >  float(params['ROI_h'][1]):
         raise Exception('Peak in heating run falls out of region of interest. Verify the regions of interest and the region of peak.')
-    if params['ROP_c'][0] <  params['ROI_c'][0] or params['ROP_c'][1] >  params['ROI_c'][1]:
+    if float(params['ROP_c'][0]) <  float(params['ROI_c'][0]) or float(params['ROP_c'][1]) >  float(params['ROI_c'][1]):
         raise Exception('Peak in cooling run falls out of region of interest. Verify the regions of interest and the region of peak.')
             
-
+    for key in header_heating:
+        header_heating[key] += '# Data between {} and {} degC were analyzed. \n'.format(params['ROI_h'][0], params['ROI_h'][1])
+        header_heating[key] += '# Peak is located between {} and {} degC. \n'.format(params['ROP_h'][0], params['ROP_h'][1])
+    for key in header_cooling:
+        header_cooling[key] += '# Data between {} and {} degC were analyzed. \n'.format(params['ROI_c'][0], params['ROI_c'][1])
+        header_cooling[key] += '# Peak is located between {} and {} degC. \n'.format(params['ROP_c'][0], params['ROP_c'][1])
+        
     if W_counter == 0 and D_counter == 0:
         print('Check performed sucessfully. No errors encountered!')    
     else:
         print('\n', 5*'*', '{} Warnings have arisen during file check!'.format(W_counter), 5*'*')
         print(5*'*', '{} Files will be ignored in the calculations!'.format(D_counter), 5*'*')
+    
+    
     return None
     
     
@@ -376,7 +555,7 @@ def correction(data, refs, files, params):
 
     if np.shape(refs['EC_cooling'])[0]:
         tck_EC = interpolate.interp1d(refs['EC_cooling'][1,:], refs['EC_cooling'][2,:], fill_value='extrapolate')
-        if np.shape(refs['B_cooling'])[0]:
+        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb'][0]) > 0.0:
             print('Correcting the Buffer cooling run for the Empty cell cooling run')
             EC_interpol = tck_EC(refs['B_cooling'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
             Buffer_corrected = np.array((refs['B_cooling'][0,:], refs['B_cooling'][1,:], refs['B_cooling'][2,:]-EC_interpol))
@@ -395,7 +574,7 @@ def correction(data, refs, files, params):
                    data_corrected = data[i][2,:] - EC_interpol #corrects the sample data for the empty cell measurement. 
                    data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
     else: #if the empty cell was not measured
-        if np.shape(refs['B_cooling'])[0]: #if buffer was measured
+        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb'][0]) > 0.0: #if buffer was measured
             tck_B = interpolate.interp1d(refs['B_cooling'][1,:], refs['B_cooling'][2,:], fill_value='extrapolate')
             for i in files['S_cooling']:
                 print('Correcting file {} for Buffer measurement'.format(i))
@@ -411,7 +590,7 @@ def correction(data, refs, files, params):
     
     if np.shape(refs['EC_heating'])[0]:
         tck_EC = interpolate.interp1d(refs['EC_heating'][1,:], refs['EC_heating'][2,:], fill_value='extrapolate')
-        if np.shape(refs['B_heating'])[0]:
+        if np.shape(refs['B_heating'])[0] and float(params['mass_bb'][0]) > 0.0:
             print('Correcting the Buffer heating run for the Empty cell heating run')
             EC_interpol = tck_EC(refs['B_heating'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
             Buffer_corrected = np.array((refs['B_heating'][0,:], refs['B_heating'][1,:], refs['B_heating'][2,:]-EC_interpol))
@@ -431,7 +610,7 @@ def correction(data, refs, files, params):
                    data_corrected = data[i][2,:] - EC_interpol #corrects the sample data for the empty cell measurement. 
                    data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
     else: #if the empty cell was not measured
-        if np.shape(refs['B_heating'])[0]: #if buffer was measured
+        if np.shape(refs['B_heating'])[0] and float(params['mass_bb'][0]) > 0.0: #if buffer was measured
             tck_B = interpolate.interp1d(refs['B_heating'][1,:], refs['B_heating'][2,:], fill_value='extrapolate')
             for i in files['S_heating']:
                 print('Correcting file {} for Buffer measurement'.format(i))
@@ -479,6 +658,16 @@ def baseline(data_norm, params, files):
     print('\n', 15*'*', 'Baseline substraction', 15*'*')
     data_baseline = dict()
     
+    def roundError(N,E):
+        '''Function used to format the values of DH and its error according to the error'''
+        p=10**round(log(E,10)-0.5)
+        return p*round(N/p),p*round(E/p)
+
+    for key in header_heating:
+        header_heating[key] += 50*'#' + '\n'
+    for key in header_cooling:
+        header_cooling[key] += 50*'#' + '\n'
+        
     def base(pre_s, pre_i, post_s, post_i, alpha, T):
         '''Calculates the baseline according to the linear interpolation of the region before the peak and after the peak'''
         return pre_i + pre_s*T - alpha*((pre_i-post_i) + (pre_s-post_s)*T)
@@ -518,13 +707,40 @@ def baseline(data_norm, params, files):
             DH = H[-1] - newH[-1]
             H = newH
         if 'Mw' in params:
-            print('Iteration number {}, enthalpy variation of {:3g} J/mol, final value of DH is {:2g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], errH))
+            print('Iteration number {}, enthalpy variation of {:3g} J/mol, final value of DH is {:.5g} +- {:.2g} kJ/mol'.format(itermax, abs(DH/H[-1]), H[-1]/1e3, abs(errH)/1e3))
+            header_heating[i] += '# DH of the heating run is {:.5g} +- {:.2g} kJ/mol. \n'.format(*roundError(H[-1]/1e3, abs(errH/1e3)))
         else:
-            print('Iteration number {}, enthalpy variation of {:3g} J/g, final value of DH is {:2g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], errH))
+            print('Iteration number {}, enthalpy variation of {:3g} J/g, final value of DH is {:.5g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], abs(errH)))
+            header_heating[i] += '# DH of the heating run is {:.5g} +- {:.2g} J/g. \n'.format(H[-1], abs(errH))
+            
         j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
         data_baseline[i] = j
         
-
+        #determination of maximum or minimum of temperature and Delta CP at Tmax (or Tmin)
+        if H[-1] > 0:
+            Tmax = data_norm[i][np.argmax(data_norm[i][:,1]-newbase),0]
+            header_heating[i] += '# Peak position is at {:.1f} degC. \n'.format(Tmax)
+            DCp = (post_i - pre_i) + (post_s-pre_s)*Tmax
+            print('Peak position is at {:.1f} degC'.format(Tmax))
+            if 'Mw' in params:
+                print('Calculated Delta Cp at the peak position is {:.2g} J/K/mol'.format(DCp))
+                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/mol. \n'.format(DCp)
+            else:
+                print('Calculated Delta Cp at the peak position is {:.2g} J/K/g'.format(DCp))
+                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/g. \n'.format(DCp)
+        if H[-1] < 0:
+            Tmin = data_norm[i][np.argmin(data_norm[i][:,1]-newbase),0]
+            header_heating[i] += '# Peak position is at {:.1f} degC'.format(Tmin)
+            DCp = (post_i - pre_i) + (post_s-pre_s)*Tmin
+            print('Peak position is at {:.1f} degC'.format(Tmin))
+            if 'Mw' in params:
+                print('Calculated Delta Cp at the peak position is {:.2g} J/K/mol'.format(DCp))
+                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/mol. \n'.format(DCp)
+            else:
+                print('Calculated Delta Cp at the peak position is {:.2g} J/K/g'.format(DCp))
+                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/g. \n'.format(DCp)
+        header_heating[i] += 50*'#' + '\n'
+                
     for i in files['S_cooling']:
         #liner fit of the regions before (pre) and after (post) the peak is performed. 
         pre = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0], :]
@@ -564,14 +780,41 @@ def baseline(data_norm, params, files):
             DH = H[-1] - newH[-1]
             H = newH
         if 'Mw' in params:
-            print('Iteration number {}, enthalpy variation of {:.3g} J/mol, final value of DH is {:2g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], errH))
+            print('Iteration number {}, enthalpy variation of {:.3g} J/mol, final value of DH is {:.5g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], abs(errH)))
+            header_cooling[i] += '# DH of the cooling run is {:.5g} +- {:.2g} J/mol. \n'.format(H[-1], abs(errH))
         else:
-            print('Iteration number {}, enthalpy variation of {:.3g} J/g, final value of DH is {:2g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], errH))
+            print('Iteration number {}, enthalpy variation of {:.3g} J/g, final value of DH is {:.5g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], abs(errH)))
+            header_cooling[i] += '# DH of the cooling run is {:.5g} +- {:.2g} J/g. \n'.format(H[-1], abs(errH))
         
         
         j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
         data_baseline[i] = j       
         
+        #determination of maximum or minimum of temperature and Delta CP at Tmax (or Tmin)
+        if H[-1] < 0: #if process is endothermic
+            Tmax = data_norm[i][np.argmax(data_norm[i][:,1]-newbase),0] 
+            header_cooling[i] += '# Peak position is at {:.1f} degC. \n'.format(Tmax)
+            DCp = (post_i - pre_i) + (post_s-pre_s)*Tmax
+            print('Peak position is at {:.1f} degC'.format(Tmax))
+            if 'Mw' in params:
+                print('Calculated Delta Cp at the peak position is {:.2g} J/K/mol'.format(DCp))
+                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/mol. \n'.format(DCp)
+            else:
+                print('Calculated Delta Cp at the peak position is {:.2g} J/K/g'.format(DCp))
+                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/g. \n'.format(DCp)
+        if H[-1] > 0: #if process is exothermic
+            Tmin = data_norm[i][np.argmin(data_norm[i][:,1]-newbase),0]
+            header_cooling[i] += '# Peak position is at {:.1f} degC'.format(Tmin)
+            DCp = (post_i - pre_i) + (post_s-pre_s)*Tmin
+            print('Peak position is at {:.1f} degC'.format(Tmin))
+            if 'Mw' in params:
+                print('Calculated Delta Cp at the peak position is {:.2g} J/K/mol'.format(DCp))
+                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/mol. \n'.format(DCp)
+            else:
+                print('Calculated Delta Cp at the peak position is {:.2g} J/K/g'.format(DCp))
+                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/g. \n'.format(DCp)
+                
+        header_cooling[i] += 50*'#' + '\n'
     
     return data_baseline
 
@@ -579,24 +822,24 @@ def export_final_data(files, data, params):
     ''' Function which exports the final data-set.'''
     print('\n', 15*'*', 'Exporting the treated data-set', 15*'*')
     
+    
+    write_header(header_heating, header_cooling, files)
+    
     def export(file, data, params):
-        filename = os.path.join('Output', 'exp-' + str(file)) 
-        #with open(os.path.join('export', filename), 'w+') as f:
-        s = '# Data threated with pyDSC, version xxxx, \n'
-        s += '#More information here? \n'
+        filename = os.path.join('Output', 'exp-' + str(file) + '.dat') 
         if 'Mw' in params:
-            s += '#Temp/ [degC] \t CP-baseline / [J/K/mol] \t CP [J/K/mol] \t baseline [J/K/mol] \t H [J/mol]'
+            s = 'Temp/ [degC] \t CP-baseline / [J/K/mol] \t CP [J/K/mol] \t baseline [J/K/mol] \t H [J/mol]'
         else:
-            s += '#Temp/ [degC] \t CP-baseline / [J/K/g] \t CP [J/K/g] \t baseline [J/K/g] \t H [J/g]'
+            s = 'Temp/ [degC] \t CP-baseline / [J/K/g] \t CP [J/K/g] \t baseline [J/K/g] \t H [J/g]'
         
-        np.savetxt(filename, data[i], delimiter='\t', header=s)
-            
-        
-        
+        with open(filename, 'ab') as f:
+            np.savetxt(f, data[i], delimiter='\t', header=s)
         
         
     for i in files['S_heating']:
         export(i, data, params)
     for i in files['S_cooling']:
         export(i, data, params)
+        
+    return None
     
