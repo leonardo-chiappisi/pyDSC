@@ -332,7 +332,11 @@ def extract_data(files, params, *args, **kwargs):
                 
             
             data[j] = data_set
-            dataraw[j] = tmp2
+            
+            for j in files[key]:
+                if params['Input'][0] != params['Output'][0]: #renormalized from exo-up to exo-down convention, or viceversa. 
+                    tmp2[2,:] *= -1
+                dataraw[j] = tmp2
             
             print('Datafile {} read correctly'.format(j))
     print('\n')
@@ -791,7 +795,7 @@ def baseline(data_norm, params, files):
         data_baseline[i] = j       
         
         #determination of maximum or minimum of temperature and Delta CP at Tmax (or Tmin)
-        if H[-1] > 0: #if process is endothermic
+        if H[-1] < 0: #if process is endothermic
             Tmax = data_norm[i][np.argmax(data_norm[i][:,1]-newbase),0] 
             header_cooling[i] += '# Peak position is at {:.1f} degC. \n'.format(Tmax)
             DCp = (post_i - pre_i) + (post_s-pre_s)*Tmax
@@ -802,7 +806,8 @@ def baseline(data_norm, params, files):
             else:
                 print('Calculated Delta Cp at the peak position is {:.2g} J/K/g'.format(DCp))
                 header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/g. \n'.format(DCp)
-        if H[-1] < 0: #if process is exothermic
+                
+        if H[-1] > 0: #if process is exothermic
             Tmin = data_norm[i][np.argmin(data_norm[i][:,1]-newbase),0]
             header_cooling[i] += '# Peak position is at {:.1f} degC'.format(Tmin)
             DCp = (post_i - pre_i) + (post_s-pre_s)*Tmin

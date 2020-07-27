@@ -20,10 +20,11 @@ Edit 2020.03.03: Included TA_temp_power_time data format
 Edit 2020.03.04: Script automatically tries to read the datafiles using different encodings. The encoding
                  parameter is not required anymore in the input_params file. Small bugs corrected.  
 Edit 2020.03.13: Corrected small bugs, included 3cols_variable_header_temp_power_time data format. 
+Edit 2020.07.27: Corrected small bugs.
 """
 
-version = '0.5.3'
-date = '2020.03.13'
+version = '0.5.4'
+date = '2020.07.27'
 
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 
 import dsc_plot as plot
