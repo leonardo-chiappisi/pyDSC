@@ -12,7 +12,7 @@ import numpy as np
 
 plt.rcParams['text.usetex'] = False
 
-def plot_raw_data(files, data, params):
+def plot_raw_data(files, data, params, filename):
     ''' Plots the raw_data'''
     
     print('\n', 15*'*', 'Plotting the raw data', 15*'*')
@@ -22,12 +22,12 @@ def plot_raw_data(files, data, params):
         axes[idx[0], idx[1]].set_ylabel('Heat flow / 10$^{-3}$ W')
         axes[idx[0], idx[1]].set_title(title)
         #axes[idx[0], idx[1]].legend(loc='upper left')
-        if params['Exo_in_plot'][0] == 'true':
-            if params['Input'][0] == 'exo-down':
+        if params['Exo_in_plot'] is True:
+            if params['Input'] == 'exo-down':
                 axes[idx[0], idx[1]].annotate('Exo-down', xy=(0.1, 0.05), xytext=(0.1, 0.25), xycoords = 'axes fraction',
                          arrowprops=dict(arrowstyle='->'), 
                          horizontalalignment='center')
-            if params['Input'][0] == 'exo-up':
+            if params['Input'] == 'exo-up':
                 axes[idx[0], idx[1]].annotate('Exo-up', xy=(0.1, 0.25), xytext=(0.1, 0.05), xycoords = 'axes fraction',
                          arrowprops=dict(arrowstyle='->'), 
                          horizontalalignment='center')
@@ -73,13 +73,13 @@ def plot_raw_data(files, data, params):
 
         
     plt.tight_layout()
-    plt.savefig('Rawdata.pdf')
+    plt.savefig(filename + '_Rawdata.pdf')
     plt.close(fig)  
    
     
     
     
-def plot_corrected_data(files, data, params):
+def plot_corrected_data(files, data, params, filename):
     ''' Plots the corrected data'''
     print('\n', 15*'*', 'Plots the corrected data', 15*'*')
     
@@ -108,11 +108,11 @@ def plot_corrected_data(files, data, params):
         i+= 1
     
     gs.tight_layout(fig)
-    plt.savefig('Corrected_data.pdf')
+    plt.savefig(filename + '_Corrected_data.pdf')
     plt.close(fig)
 
     
-def plot_final_data(files, data, params):
+def plot_final_data(files, data, params, filename):
     ''' Plots the final data'''
     print('\n', 15*'*', 'Plots the final data', 15*'*')
     
@@ -129,12 +129,12 @@ def plot_final_data(files, data, params):
             else:
                 ax.set_ylabel('Heat capacity / J K$^{-1}$ g$^{-1}$')
         ax.set_title(title)
-        if params['Exo_in_plot'][0] == 'true':
-            if params['Output'][0] == 'exo-down':
+        if params['Exo_in_plot'] is True:
+            if params['Output'] == 'exo-down':
                 ax.annotate('Exo-down', xy=(0.1, 0.05), xytext=(0.1, 0.25), xycoords = 'axes fraction',
                          arrowprops=dict(arrowstyle='->'), 
                          horizontalalignment='center')
-            if params['Output'][0] == 'exo-up':
+            if params['Output'] == 'exo-up':
                 ax.annotate('Exo-up', xy=(0.1, 0.25), xytext=(0.1, 0.05), xycoords = 'axes fraction',
                          arrowprops=dict(arrowstyle='->'), 
                          horizontalalignment='center')
@@ -175,12 +175,12 @@ def plot_final_data(files, data, params):
         i+= 1
     
     gs.tight_layout(fig)
-    plt.savefig('Final_data.pdf')
+    plt.savefig(filename + '_Final_data.pdf')
     plt.close(fig)
     
     
     
-def plot_baseline_data(files, data, params):
+def plot_baseline_data(files, data, params, filename):
     ''' Plots the baseline corrected data'''
     print('\n', 15*'*', 'Plots the baseline corrected data', 15*'*')
     
@@ -221,11 +221,11 @@ def plot_baseline_data(files, data, params):
         i+= 1
     
     gs.tight_layout(fig)
-    plt.savefig('Baseline_data.pdf')
+    plt.savefig(filename + '_Baseline_data.pdf')
     plt.close(fig)
     
     
-def plot_alpha(files, data, params):
+def plot_alpha(files, data, params, filename):
     ''' Plots the degree of conversion for all data'''
     print('\n', 15*'*', 'Plots the degree of conversion for all data', 15*'*')
     
@@ -246,5 +246,5 @@ def plot_alpha(files, data, params):
     
     plt.legend()
 
-    plt.savefig('alpha.pdf')
+    plt.savefig(filename + '_alpha.pdf')
     plt.close(fig)
