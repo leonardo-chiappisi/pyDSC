@@ -521,7 +521,7 @@ def correction(data, refs, files, params):
 
     if np.shape(refs['EC_cooling'])[0]:
         tck_EC = interpolate.interp1d(refs['EC_cooling'][1,:], refs['EC_cooling'][2,:], fill_value='extrapolate')
-        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb'][0]) > 0.0:
+        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb']) > 0.0:
             print('Correcting the Buffer cooling run for the Empty cell cooling run')
             EC_interpol = tck_EC(refs['B_cooling'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
             Buffer_corrected = np.array((refs['B_cooling'][0,:], refs['B_cooling'][1,:], refs['B_cooling'][2,:]-EC_interpol))
@@ -530,7 +530,7 @@ def correction(data, refs, files, params):
                 print('Correcting file {} for EC and Buffer measurement'.format(i))
                 B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run. 
                 EC_interpol = tck_EC(data[i][1,:])  #linear interpolation of the heatflow of the EC as a function of the temperature of the sample run. 
-                sf_c = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0])  #scaling factor used for correcting cooling sample run. 
+                sf_c = (float(params['mass_s'])*(1.-float(params['s_wt'])) - float(params['mass_r']))/float(params['mass_bb'])  #scaling factor used for correcting cooling sample run. 
                 data_corrected = data[i][2,:] - EC_interpol - B_interpol * sf_c  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
                 data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
         else:  #if empty cell was measured but not the buffer/buffer. 
@@ -540,12 +540,12 @@ def correction(data, refs, files, params):
                    data_corrected = data[i][2,:] - EC_interpol #corrects the sample data for the empty cell measurement. 
                    data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
     else: #if the empty cell was not measured
-        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb'][0]) > 0.0: #if buffer was measured
+        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb']) > 0.0: #if buffer was measured
             tck_B = interpolate.interp1d(refs['B_cooling'][1,:], refs['B_cooling'][2,:], fill_value='extrapolate')
             for i in files['S_cooling']:
                 print('Correcting file {} for Buffer measurement'.format(i))
                 B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run.       
-                sf_c = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0])
+                sf_c = (float(params['mass_s'])*(1.-float(params['s_wt'])) - float(params['mass_r']))/float(params['mass_bb'])
                 data_corrected = data[i][2,:] - B_interpol * sf_c  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
                 data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
         else: #if no empty cell nor buffer were measured. 
@@ -556,7 +556,7 @@ def correction(data, refs, files, params):
     
     if np.shape(refs['EC_heating'])[0]:
         tck_EC = interpolate.interp1d(refs['EC_heating'][1,:], refs['EC_heating'][2,:], fill_value='extrapolate')
-        if np.shape(refs['B_heating'])[0] and float(params['mass_bb'][0]) > 0.0:
+        if np.shape(refs['B_heating'])[0] and float(params['mass_bb']) > 0.0:
             print('Correcting the Buffer heating run for the Empty cell heating run')
             EC_interpol = tck_EC(refs['B_heating'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
             Buffer_corrected = np.array((refs['B_heating'][0,:], refs['B_heating'][1,:], refs['B_heating'][2,:]-EC_interpol))
@@ -566,7 +566,7 @@ def correction(data, refs, files, params):
                 print('Correcting file {} for EC and Buffer measurement'.format(i))
                 B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run. 
                 EC_interpol = tck_EC(data[i][1,:])  #linear interpolation of the heatflow of the EC as a function of the temperature of the sample run. 
-                sf_h = (float(params['mass_s'][0])*(1-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0]) #scaling factor used for correcting heating sample run. 
+                sf_h = (float(params['mass_s'])*(1-float(params['s_wt'])) - float(params['mass_r']))/float(params['mass_bb']) #scaling factor used for correcting heating sample run. 
                 data_corrected = data[i][2,:] - EC_interpol - B_interpol *sf_h  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
                 data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
         else:  #if empty cell was measured but not the buffer/buffer. 
@@ -576,12 +576,12 @@ def correction(data, refs, files, params):
                    data_corrected = data[i][2,:] - EC_interpol*0.73 #corrects the sample data for the empty cell measurement. 
                    data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
     else: #if the empty cell was not measured
-        if np.shape(refs['B_heating'])[0] and float(params['mass_bb'][0]) > 0.0: #if buffer was measured
+        if np.shape(refs['B_heating'])[0] and float(params['mass_bb']) > 0.0: #if buffer was measured
             tck_B = interpolate.interp1d(refs['B_heating'][1,:], refs['B_heating'][2,:], fill_value='extrapolate')
             for i in files['S_heating']:
                 print('Correcting file {} for Buffer measurement'.format(i))
                 B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run.       
-                sf_h = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0]) #scaling factor used for correcting heating sample run. 
+                sf_h = (float(params['mass_s'])*(1.-float(params['s_wt'])) - float(params['mass_r']))/float(params['mass_bb']) #scaling factor used for correcting heating sample run. 
                 data_corrected = data[i][2,:] - B_interpol * sf_h  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
                 data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
         else: #if no empty cell nor buffer were measured. 
