@@ -47,7 +47,7 @@ samples['Sample1'] = {'Folder': '/rawdata',
                       'Mw': 157.21, #optional, comment out if not needed
                       'ROI_h': [30.0, 90.0],
                       'ROI_c': [15.0, 70.0],
-                      'ROP_h': [45.0, 65.0],
+                      'ROP_h': [35.0, 75.0],
                       'ROP_c': [25.0, 55.0],
                       'Scanrate_h': 1.8,
                       'Scanrate_c': 1.2,
