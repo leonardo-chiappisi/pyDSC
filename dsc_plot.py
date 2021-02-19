@@ -9,6 +9,7 @@ File where the functions used to plot all the data are stored.
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import numpy as np
+import os
 
 plt.rcParams['text.usetex'] = False
 
@@ -70,10 +71,9 @@ def plot_raw_data(files, data, params, filename):
         axes[idx[0], idx[1]].plot(data[i][1,:], data[i][2,:], label=i) 
         axes[idx[0], idx[1]].legend()
     
-
-        
+    filename = os.path.join(os.path.join(params['Folder'],'Output'), filename + '_Rawdata.pdf') 
     plt.tight_layout()
-    plt.savefig(filename + '_Rawdata.pdf')
+    plt.savefig(filename)
     plt.close(fig)  
    
     
@@ -106,9 +106,10 @@ def plot_corrected_data(files, data, params, filename):
         applyPlotStyle(file, ax, Mw = 'Mw' in params)
         plot(ax, data, file, Mw = 'Mw' in params)
         i+= 1
-    
+        
+    filename = os.path.join(os.path.join(params['Folder'],'Output'), filename + '_Corrected_data.pdf') 
     gs.tight_layout(fig)
-    plt.savefig(filename + '_Corrected_data.pdf')
+    plt.savefig(filename)
     plt.close(fig)
 
     
@@ -174,8 +175,9 @@ def plot_final_data(files, data, params, filename):
         plot(ax, data, file, kJ, Mw = 'Mw' in params)
         i+= 1
     
+    filename = os.path.join(os.path.join(params['Folder'],'Output'), filename + '_Final_data.pdf') 
     gs.tight_layout(fig)
-    plt.savefig(filename + '_Final_data.pdf')
+    plt.savefig(filename)
     plt.close(fig)
     
     
@@ -221,7 +223,8 @@ def plot_baseline_data(files, data, params, filename):
         i+= 1
     
     gs.tight_layout(fig)
-    plt.savefig(filename + '_Baseline_data.pdf')
+    filename = os.path.join(os.path.join(params['Folder'],'Output'), filename + '_Baseline_data.pdf') 
+    plt.savefig(filename)
     plt.close(fig)
     
     
@@ -245,6 +248,6 @@ def plot_alpha(files, data, params, filename):
 
     
     plt.legend()
-
-    plt.savefig(filename + '_alpha.pdf')
+    filename = os.path.join(os.path.join(params['Folder'],'Output'), filename +  '_alpha.pdf') 
+    plt.savefig(filename)
     plt.close(fig)

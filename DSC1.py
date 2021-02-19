@@ -163,7 +163,7 @@ def extract_data(files, params, *args, **kwargs):
                 if params['Dataformat'] == 'Setaram3':
                     for code in encodings:
                         try:
-                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                            with open(os.path.join(params['Folder'], str(j)), 'r', errors='replace', encoding=code) as inp:
                                 hl = 1 #length of the header of the file to be read. 
                                 line = inp.readline()
                                 while 'Furnace' not in line.split():
@@ -171,7 +171,7 @@ def extract_data(files, params, *args, **kwargs):
                                     hl += 1
                                     if hl > 500:
                                         raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
-                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
                         except:
@@ -181,7 +181,7 @@ def extract_data(files, params, *args, **kwargs):
                 elif params['Dataformat'] == 'Setaram3temptime':
                     for code in encodings:
                         try:
-                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                            with open(os.path.join(params['Folder'], str(j)), 'r', errors='replace', encoding=code) as inp:
                                 hl = 1 #length of the header of the file to be read. 
                                 line = inp.readline()
                                 while 'Furnace' not in line.split():
@@ -189,7 +189,7 @@ def extract_data(files, params, *args, **kwargs):
                                     hl += 1
                                     if hl > 500:
                                         raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
-                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding=code) #imports all data stored in files
+                            tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,0,2), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
                         except:
@@ -199,7 +199,7 @@ def extract_data(files, params, *args, **kwargs):
                 elif params['Dataformat'] == 'Setaram4':
                     for code in encodings:
                         try:
-                            with open(os.path.join('rawdata', str(j)), 'r', errors='replace', encoding=code) as inp:
+                            with open(os.path.join(params['Folder'], str(j)), 'r', errors='replace', encoding=code) as inp:
                                 hl = 1 #length of the header of the file to be read. 
                                 line = inp.readline()
                                 while 'Furnace' not in line.split():
@@ -207,7 +207,7 @@ def extract_data(files, params, *args, **kwargs):
                                     hl += 1
                                     if hl > 500:
                                         raise Exception('Cannot import datafile {} correctly. Ensure the encoding is set correctly. Current encoding is {}.'.format(j, code))
-                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
+                            tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl+1, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
                         except:
@@ -218,7 +218,7 @@ def extract_data(files, params, *args, **kwargs):
                     for code in encodings:
                         try:
                             hl = 1 #length of the header of the file to be read. 
-                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
                         except:
@@ -228,7 +228,7 @@ def extract_data(files, params, *args, **kwargs):
                     for code in encodings:
                         try:
                             hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
-                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
+                            tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
                         except:
@@ -238,7 +238,7 @@ def extract_data(files, params, *args, **kwargs):
                     for code in encodings:
                         try:
                             hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
-                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
+                            tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
                         except:
@@ -248,7 +248,7 @@ def extract_data(files, params, *args, **kwargs):
                     for code in encodings:
                         try:
                             hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
-                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
+                            tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
                         except:
@@ -259,7 +259,7 @@ def extract_data(files, params, *args, **kwargs):
                     for code in encodings:
                         try:
                             hl = 1 #length of the header of the file to be read.
-                            tmp = np.genfromtxt(os.path.join('rawdata', str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
+                            tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
                         except:
@@ -521,7 +521,7 @@ def correction(data, refs, files, params):
 
     if np.shape(refs['EC_cooling'])[0]:
         tck_EC = interpolate.interp1d(refs['EC_cooling'][1,:], refs['EC_cooling'][2,:], fill_value='extrapolate')
-        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb']) > 0.0:
+        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb'][0]) > 0.0:
             print('Correcting the Buffer cooling run for the Empty cell cooling run')
             EC_interpol = tck_EC(refs['B_cooling'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
             Buffer_corrected = np.array((refs['B_cooling'][0,:], refs['B_cooling'][1,:], refs['B_cooling'][2,:]-EC_interpol))
@@ -530,7 +530,7 @@ def correction(data, refs, files, params):
                 print('Correcting file {} for EC and Buffer measurement'.format(i))
                 B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run. 
                 EC_interpol = tck_EC(data[i][1,:])  #linear interpolation of the heatflow of the EC as a function of the temperature of the sample run. 
-                sf_c = (float(params['mass_s'])*(1.-float(params['s_wt'])) - float(params['mass_r']))/float(params['mass_bb'])  #scaling factor used for correcting cooling sample run. 
+                sf_c = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0])  #scaling factor used for correcting cooling sample run. 
                 data_corrected = data[i][2,:] - EC_interpol - B_interpol * sf_c  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
                 data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
         else:  #if empty cell was measured but not the buffer/buffer. 
@@ -540,12 +540,12 @@ def correction(data, refs, files, params):
                    data_corrected = data[i][2,:] - EC_interpol #corrects the sample data for the empty cell measurement. 
                    data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
     else: #if the empty cell was not measured
-        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb']) > 0.0: #if buffer was measured
+        if np.shape(refs['B_cooling'])[0] and float(params['mass_bb'][0]) > 0.0: #if buffer was measured
             tck_B = interpolate.interp1d(refs['B_cooling'][1,:], refs['B_cooling'][2,:], fill_value='extrapolate')
             for i in files['S_cooling']:
                 print('Correcting file {} for Buffer measurement'.format(i))
                 B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run.       
-                sf_c = (float(params['mass_s'])*(1.-float(params['s_wt'])) - float(params['mass_r']))/float(params['mass_bb'])
+                sf_c = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0])
                 data_corrected = data[i][2,:] - B_interpol * sf_c  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
                 data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
         else: #if no empty cell nor buffer were measured. 
@@ -556,7 +556,7 @@ def correction(data, refs, files, params):
     
     if np.shape(refs['EC_heating'])[0]:
         tck_EC = interpolate.interp1d(refs['EC_heating'][1,:], refs['EC_heating'][2,:], fill_value='extrapolate')
-        if np.shape(refs['B_heating'])[0] and float(params['mass_bb']) > 0.0:
+        if np.shape(refs['B_heating'])[0] and float(params['mass_bb'][0]) > 0.0:
             print('Correcting the Buffer heating run for the Empty cell heating run')
             EC_interpol = tck_EC(refs['B_heating'][1,:])  #linear interpolation of the heatflow as a function of the temperature of the buffer run.
             Buffer_corrected = np.array((refs['B_heating'][0,:], refs['B_heating'][1,:], refs['B_heating'][2,:]-EC_interpol))
@@ -566,7 +566,7 @@ def correction(data, refs, files, params):
                 print('Correcting file {} for EC and Buffer measurement'.format(i))
                 B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run. 
                 EC_interpol = tck_EC(data[i][1,:])  #linear interpolation of the heatflow of the EC as a function of the temperature of the sample run. 
-                sf_h = (float(params['mass_s'])*(1-float(params['s_wt'])) - float(params['mass_r']))/float(params['mass_bb']) #scaling factor used for correcting heating sample run. 
+                sf_h = (float(params['mass_s'][0])*(1-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0]) #scaling factor used for correcting heating sample run. 
                 data_corrected = data[i][2,:] - EC_interpol - B_interpol *sf_h  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
                 data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
         else:  #if empty cell was measured but not the buffer/buffer. 
@@ -576,12 +576,12 @@ def correction(data, refs, files, params):
                    data_corrected = data[i][2,:] - EC_interpol*0.73 #corrects the sample data for the empty cell measurement. 
                    data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
     else: #if the empty cell was not measured
-        if np.shape(refs['B_heating'])[0] and float(params['mass_bb']) > 0.0: #if buffer was measured
+        if np.shape(refs['B_heating'])[0] and float(params['mass_bb'][0]) > 0.0: #if buffer was measured
             tck_B = interpolate.interp1d(refs['B_heating'][1,:], refs['B_heating'][2,:], fill_value='extrapolate')
             for i in files['S_heating']:
                 print('Correcting file {} for Buffer measurement'.format(i))
                 B_interpol = tck_B(data[i][1,:])  #linear interpolation of the heatflow of the buffer as a function of the temperature of the sample run.       
-                sf_h = (float(params['mass_s'])*(1.-float(params['s_wt'])) - float(params['mass_r']))/float(params['mass_bb']) #scaling factor used for correcting heating sample run. 
+                sf_h = (float(params['mass_s'][0])*(1.-float(params['s_wt'][0])) - float(params['mass_r'][0]))/float(params['mass_bb'][0]) #scaling factor used for correcting heating sample run. 
                 data_corrected = data[i][2,:] - B_interpol * sf_h  #corrects the data for the empty and for the buffer signal, calculated from the buffer-buffer experiment and reweighted for the buffer difference in sample and reference cell. 
                 data_c[i] = np.array([data[i][0,:], data[i][1,:], data_corrected, data[i][3,:], data[i][4,:]])
         else: #if no empty cell nor buffer were measured. 
@@ -793,7 +793,7 @@ def export_final_data(files, data, params):
     write_header(header_heating, header_cooling, files)
     
     def export(file, data, params):
-        filename = os.path.join('Output', 'exp-' + str(file) + '.dat') 
+        filename = os.path.join(os.path.join(params['Folder'],'Output'), 'exp-' + str(file) + '.dat') 
         if 'Mw' in params:
             s = 'Temp/ [degC] \t CP-baseline / [J/K/mol] \t CP [J/K/mol] \t baseline [J/K/mol] \t H [J/mol]'
         else:
