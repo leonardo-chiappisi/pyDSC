@@ -2,10 +2,12 @@
 """
 20.01.2021 : Aline Cisse. Correction of params[''][0] in param[''] (removal of the [0]) 
 in correction module of DSC1.py. 
+2021.02.19: Leo. Small bug correction, data are read from the path defined in the input file and exported to an output folder which is created in the rawdata folder.
+
 """
 
-version = '1.0.1'
-date = '2021.01.20'
+version = '1.0.2'
+date = '2021.02.19'
 
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 
 import dsc_plot as plot
@@ -15,6 +17,7 @@ from dsc_input import samples as input_data
 for sample in input_data:
     files = dsc.read_files(version,date,input_data[sample])  #creates a dictionary which contains all filenames used by the script
     params = dsc.read_params(input_data[sample]) #reads from the input files the parameters necessary to analyse the data, from the masses to the definiton of the temperature ranges 
+    Path(os.path.join(params['Folder'],'Output').mkdir(parents=True, exist_ok=True))  #creates the output file directory.
     data, dataraw = dsc.extract_data(files, params) #creates an array which contains all the data values within the ROIs and already binned. 
     dsc.check_data(data, files, params) #veryfies that all input values are correct. 
     plot.plot_raw_data(files, dataraw, params, sample) #plots the raw data. 
