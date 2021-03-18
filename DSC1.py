@@ -6,11 +6,12 @@ File created on december 2018 by Leonardo Chiappisi
 import numpy as np
 #import pandas as pd
 import os
+import sys
 from math import log
 from scipy import interpolate, integrate
 from scipy.stats import linregress
 
-encodings = [ 'utf-8', 'utf-16', 'latin1']
+encodings = [ 'utf-8', 'utf-16', 'latin1', 'cp1252']
 header_heating = dict() #Dictionary containing the headers of the exported heating files
 header_cooling = dict() #Dictionary containing the headers of the exported cooling files
 
@@ -116,7 +117,21 @@ def read_params(input_data):
             print(s)
             
  
-
+    #### Checks if datafile and folder exist.
+    for run in input_data['Heating_runs']:
+        if os.path.exists(os.path.join(params['Folder'],run)) is True:
+            None
+        else:
+              raise Exception("File {} does not exist. Please verify correct path and file name".format(os.path.join(params['Folder'],run))) 
+    
+    for run in input_data['Cooling_runs']:
+        if os.path.exists(os.path.join(params['Folder'],run)) is True:
+            None
+        else:
+              raise Exception("File {} does not exist. Please verify correct path and file name".format(os.path.join(params['Folder'],run))) 
+                
+    
+    
     
     if isinstance(params['Mw'], str):  del params['Mw'] #removes the Mw element if no Mw is provided in the input data file. 
     if params['Mw'] == 0: del params['Mw']
@@ -217,9 +232,11 @@ def extract_data(files, params, *args, **kwargs):
                 elif params['Dataformat'] == '3cols':
                     for code in encodings:
                         try:
+                            # print('Trying to load {} with encoder {}.'.format(str(j), code))
                             hl = 1 #length of the header of the file to be read. 
                             tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
+                            print(tmp)
                             break
                         except:
                             None
@@ -265,9 +282,17 @@ def extract_data(files, params, *args, **kwargs):
                         except:
                             None
                             # print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
-                            
-                    tmp[2,:] /= 1000 #conversion from uWatt into mW 
-
+                    print(tmp)
+                    try:        
+                        tmp[2,:] /= 1000 #conversion from uWatt into mW 
+                    except UnboundLocalError:
+                        sys.exit('Error loading the input files.')
+                
+                try:
+                    _ = tmp.shape
+                except UnboundLocalError:
+                    sys.exit('Error loading the input files.')
+                    
                 if 'heating' in key:
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
                 elif 'cooling' in key:
@@ -437,6 +462,12 @@ and is not consistent with the one provided in the input parameter file of {:.2g
         raise Exception('Peak in heating run falls out of region of interest. Verify the regions of interest and the region of peak.')
     if float(params['ROP_c'][0]) <  float(params['ROI_c'][0]) or float(params['ROP_c'][1]) >  float(params['ROI_c'][1]):
         raise Exception('Peak in cooling run falls out of region of interest. Verify the regions of interest and the region of peak.')
+
+#Checks that there is a region available for the baseline integration before and after the region of interest
+    if float(params['ROP_h'][0]) == float(params['ROI_h'][0]) or float(params['ROP_h'][1]) ==  float(params['ROI_h'][1]):
+        raise Exception('No data availble for baseline integration. Verify the regions of interest and the region of peak.')
+    if float(params['ROP_c'][0]) ==  float(params['ROI_c'][0]) or float(params['ROP_c'][1]) ==  float(params['ROI_c'][1]):
+        raise Exception('No data availble for baseline integration. Verify the regions of interest and the region of peak.')
             
     for key in header_heating:
         header_heating[key] += '# Data between {} and {} degC were analyzed. \n'.format(params['ROI_h'][0], params['ROI_h'][1])

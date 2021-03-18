@@ -31,31 +31,31 @@ unit_temp: degC		#Unit in which the temperature is given, can be K or degC
 unit_power: mW		#Unit in which the heatflow is given, can be uW (microWatt), mW (milliWatt), or W (Watt)
 '''
 
-samples['Sample1'] = {'Folder': '/rawdata',
-                      'Heating_runs': ['PDMAEMA_1.5wt.dat'], #['run1.dat', 'run2.dat', 'run3.dat'],
+samples['Sample1'] = {'Folder': 'rawdata',
+                      'Heating_runs': ['Myoglobin_h1_1kbar.txt'], #['run1.dat', 'run2.dat', 'run3.dat'],
                       'Cooling_runs': [], #['run4.dat', 'run5.dat', 'run6.dat'],
-                      'Empty_cell_heat_runs': ['PBS_in_D2O.dat'], #['EC1.dat', 'EC2.dat', 'EC3.dat'],
+                      'Empty_cell_heat_runs': [], #['EC1.dat', 'EC2.dat', 'EC3.dat'],
                       'Empty_cell_cool_runs': [], #['EC4.dat', 'EC5.dat', 'EC6.dat'],
                       'Buffer_heat_runs': [],
                       'Buffer_cool_runs': [],
-                      'Dataformat': 'TA_temp_power_time', 
-                      'Header_length': 3,
-                      'mass_s': 554.3,
-                      'mass_r': 534.3,
+                      'Dataformat': '3cols', 
+                      'Header_length': 1,
+                      'mass_s': 559.3,
+                      'mass_r': 515.1,
                       'mass_bb': 0.0,
-                      's_wt': 0.015,
-                      'Mw': 157.21, #optional, comment out if not needed
-                      'ROI_h': [30.0, 90.0],
+                      's_wt': 0.5,
+                      'Mw': 17.1, #optional, comment out if not needed
+                      'ROI_h': [15.0, 85.0],
                       'ROI_c': [15.0, 70.0],
-                      'ROP_h': [35.0, 75.0],
+                      'ROP_h': [50.0, 83.0],
                       'ROP_c': [25.0, 55.0],
-                      'Scanrate_h': 1.8,
-                      'Scanrate_c': 1.2,
-                      'bins': 10,
+                      'Scanrate_h': 1,
+                      'Scanrate_c': 1,
+                      'bins': 0,
                       'Input': 'exo-down',
                       'Output': 'exo-down',
                       'Exo_in_plot': True, #or False	
                       'unit_time': 's',		
                       'unit_temp': 'degC',
-                      'unit_power': 'mW'		
+                      'unit_power': 'uW'		
                       }
