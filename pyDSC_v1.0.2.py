@@ -20,7 +20,7 @@ from pathlib import Path
 for sample in input_data:
     files = dsc.read_files(version,date,input_data[sample])  #creates a dictionary which contains all filenames used by the script
     params = dsc.read_params(input_data[sample]) #reads from the input files the parameters necessary to analyse the data, from the masses to the definiton of the temperature ranges 
-    Path(os.path.join(params['Folder'],'Output').mkdir(parents=True, exist_ok=True))  #creates the output file directory.
+    Path(os.path.join(params['Folder'],'Output')).mkdir(parents=True, exist_ok=True)  #creates the output file directory.
     data, dataraw = dsc.extract_data(files, params) #creates an array which contains all the data values within the ROIs and already binned. 
     dsc.check_data(data, files, params) #veryfies that all input values are correct. 
     plot.plot_raw_data(files, dataraw, params, sample) #plots the raw data. 
