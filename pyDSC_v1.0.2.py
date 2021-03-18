@@ -12,6 +12,8 @@ date = '2021.02.19'
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 
 import dsc_plot as plot
 from dsc_input import samples as input_data
+from pathlib import Path
+
 
 
 for sample in input_data:
