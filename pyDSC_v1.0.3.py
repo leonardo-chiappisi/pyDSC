@@ -3,11 +3,11 @@
 20.01.2021 : Aline Cisse. Correction of params[''][0] in param[''] (removal of the [0]) 
 in correction module of DSC1.py. 
 2021.02.19: Leo. Small bug correction, data are read from the path defined in the input file and exported to an output folder which is created in the rawdata folder.
-
+2021.03.18: Leo: small bug corrected. 
 """
 
-version = '1.0.2'
-date = '2021.02.19'
+version = '1.0.3'
+date = '2021.03.18'
 
 import DSC1 as dsc #imports the dsc1.py script, where all used functions are stored. 
 import dsc_plot as plot
