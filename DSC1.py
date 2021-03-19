@@ -244,7 +244,7 @@ def extract_data(files, params, *args, **kwargs):
                 elif params['Dataformat'] == '3cols_variable_header':
                     for code in encodings:
                         try:
-                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            hl = int(params['Header_length']) #length of the header of the file to be read. 
                             tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(0,1,2), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
@@ -254,7 +254,7 @@ def extract_data(files, params, *args, **kwargs):
                 elif params['Dataformat'] == '3cols_variable_header_temp_power_time':
                     for code in encodings:
                         try:
-                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            hl = int(params['Header_length']) #length of the header of the file to be read. 
                             tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(2,0,1), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
@@ -264,7 +264,7 @@ def extract_data(files, params, *args, **kwargs):
                 elif params['Dataformat'] == '4cols_variable_header':
                     for code in encodings:
                         try:
-                            hl = int(params['Header_length'][0]) #length of the header of the file to be read. 
+                            hl = int(params['Header_length']) #length of the header of the file to be read. 
                             tmp = np.genfromtxt(os.path.join(params['Folder'], str(j)), skip_header=hl, skip_footer=2, unpack=True, usecols=(1,2,3), encoding=code) #imports all data stored in files
                             print('File {} opened with {} encoding.'.format(str(j), code))
                             break
