@@ -284,11 +284,11 @@ def extract_data(files, params, *args, **kwargs):
                         except:
                             None
                             # print('Tried to open the file {} with {} encoding. Failed.'.format(str(j), code))
-                    print(tmp)
-                    try:        
-                        tmp[2,:] /= 1000 #conversion from uWatt into mW 
-                    except UnboundLocalError:
-                        sys.exit('Error loading the input files.')
+                    # print(tmp)
+                    # try:        
+                        # tmp[2,:] /= 1000 #conversion from uWatt into mW 
+                    # except UnboundLocalError:
+                        # sys.exit('Error loading the input files.')
                 
                 try:
                     _ = tmp.shape
