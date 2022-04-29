@@ -198,7 +198,10 @@ def plot_baseline_data(files, data, params, filename):
     
     def plot(ax, data, file, Mw = True):
         ax.plot(data[file][:,0], data[file][:,2], linestyle = '-' )
-        ax.plot(data[file][:,0], data[file][:,3], linestyle = '-.' )
+        ax.plot(data[file][:,0], data[file][:,3], linestyle = '-.', color='#ff7f0e')
+        ax.fill_between(data[file][:,0], data[file][:,3]-data[file][:,4], data[file][:,3]+data[file][:,4], alpha=0.4 , color='#ff7f0e')
+        # ax.fill_between(data[file][:,0], data[file][:,3]+data[file][:,4], alpha=0.4)
+        
         if file in files['S_heating']:
             ax.axvspan(float(params['ROI_h'][0]), float(params['ROP_h'][0]), facecolor='#a9a9a9', alpha=0.5)
             ax.axvspan(float(params['ROI_h'][1]), float(params['ROP_h'][1]), facecolor='#a9a9a9', alpha=0.5)
