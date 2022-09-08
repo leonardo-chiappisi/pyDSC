@@ -50,6 +50,8 @@ def read_files(version, date, sample):
     sc += '# using python version {}, scipy version {} and numpy version {}. \n'.format(sys.version[:5], scipy.__version__, np.__version__)
     sh = '# Data treated with pyDSC, version {} from {}. \n'.format(version, date) #heading for heating curves
     sh += '# using python version {}, scipy version {} and numpy version {}. \n'.format(sys.version[:5], scipy.__version__, np.__version__)
+    sc += '# Please cite the work: J. Ther. Anal. Calorimetry, 145, 403-409 (2021) \n'
+    sh += '# Please cite the work: J. Ther. Anal. Calorimetry, 145, 403-409 (2021) \n'
     sc += 50*'#' + '\n'
     sh += 50*'#' + '\n'
 
@@ -293,7 +295,7 @@ def extract_data(files, params, *args, **kwargs):
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
                 elif 'cooling' in key:
                     mask = ((float(params['ROI_c'][0]) < tmp[1,:]) & (float(params['ROI_c'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
-                tmp2 = tmp[:,mask] #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer.                 
+                tmp2 = tmp[:,mask].copy() #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer.                 
                 # print(tmp2)
                 
                 if params['Input'] != params['Output']: #renormalized from exo-up to exo-down convention, or viceversa. 
@@ -314,11 +316,12 @@ def extract_data(files, params, *args, **kwargs):
                 
             
             data[j] = data_set
+            dataraw[j] = tmp2
             
-            for j in files[key]:
-                if params['Input'] != params['Output']: #renormalized from exo-up to exo-down convention, or viceversa. 
-                    tmp2[2,:] *= -1
-                dataraw[j] = tmp2
+            # for j in files[key]:
+            if params['Input'] != params['Output']: #renormalized from exo-up to exo-down convention, or viceversa. 
+                dataraw[j][2,:] *= -1
+            
             
             
             print('Datafile {} read correctly'.format(j))
@@ -776,8 +779,12 @@ def baseline(data_norm, params, files):
         #liner fit of the regions before (pre) and after (post) the peak is performed. 
         pre = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0], :]
         post = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0], :]
-        pre_s, pre_i, _, _, _ = linregress(pre)
-        post_s, post_i, _, _, _ = linregress(post)
+        
+        pre_linreg = linregress(pre)
+        pre_s, pre_i, pre_s_err, pre_i_err = pre_linreg.slope, pre_linreg.intercept, pre_linreg.stderr, pre_linreg.intercept_stderr
+        post_linreg = linregress(post)
+        post_s, post_i,post_s_err, post_i_err = post_linreg.slope, post_linreg.intercept, post_linreg.stderr, post_linreg.intercept_stderr
+        
         #first baseline is calculated as the spline connecting all the points before and the after the peak. 
         tmp =  data_norm[i][np.logical_or(float(params['ROP_c'][0]) > data_norm[i][:,0], float(params['ROP_c'][1]) < data_norm[i][:,0]), :]
         tck = interpolate.interp1d(tmp[:,0], tmp[:,1])
@@ -807,18 +814,22 @@ def baseline(data_norm, params, files):
         while  itermax < 100:
             itermax += 1
             newbase = base(pre_s, pre_i, post_s, post_i, H[::-1]/H[-1], data_norm[i][:,0])
+            err_baseline = err_base(pre_s_err, pre_i_err, post_s_err, post_i_err, H/H[-1], data_norm[i][:,0])
             newH = integrate.cumtrapz(data_norm[i][:,1]-newbase, data_norm[i][:,0], initial=0.0)
             DH = H[-1] - newH[-1]
             H = newH
+            
+            errH = (integrate.cumtrapz(err_baseline**2, data_norm[i][:,0], initial=0.0)[-1])**0.5
+            
         if 'Mw' in params:
             print('Iteration number {}, enthalpy variation of {:.3g} J/mol, final value of DH is {:.5g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], abs(errH)))
-            header_cooling[i] += '# DH of the cooling run is {:.5g} +- {:.2g} J/mol. \n'.format(H[-1], abs(errH))
+            header_cooling[i] += '# DH of the cooling run is {:.5g} +- {:.2g} kJ/mol. \n'.format(*roundError(H[-1]/1e3, abs(errH/1e3)))
         else:
             print('Iteration number {}, enthalpy variation of {:.3g} J/g, final value of DH is {:.5g} +- {:.2g} J/g'.format(itermax, abs(DH/H[-1]), H[-1], abs(errH)))
             header_cooling[i] += '# DH of the cooling run is {:.5g} +- {:.2g} J/g. \n'.format(H[-1], abs(errH))
         
         
-        j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, H])
+        j = np.column_stack([data_norm[i][:,0], data_norm[i][:,1]-newbase, data_norm[i][:,1], newbase, err_baseline, H])
         data_baseline[i] = j       
         
         #determination of maximum or minimum of temperature and Delta CP at Tmax (or Tmin)
@@ -826,25 +837,28 @@ def baseline(data_norm, params, files):
             Tmax = data_norm[i][np.argmax(data_norm[i][:,1]-newbase),0] 
             header_cooling[i] += '# Peak position is at {:.1f} degC. \n'.format(Tmax)
             DCp = (post_i - pre_i) + (post_s-pre_s)*Tmax
+            DCp_err = (post_i_err - pre_i_err) + (post_s_err-pre_s_err)*Tmax
             print('Peak position is at {:.1f} degC'.format(Tmax))
+            
             if 'Mw' in params:
-                print('Calculated Delta Cp at the peak position is {:.2g} J/K/mol'.format(DCp))
-                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/mol. \n'.format(DCp)
+                print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol.'.format(DCp, abs(DCp_err)))
+                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol. \n'.format(DCp, abs(DCp_err))
             else:
-                print('Calculated Delta Cp at the peak position is {:.2g} J/K/g'.format(DCp))
-                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/g. \n'.format(DCp)
+                print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g.'.format(DCp, abs(DCp_err)))
+                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g. \n'.format(DCp, abs(DCp_err))
                 
         if H[-1] > 0: #if process is exothermic
             Tmin = data_norm[i][np.argmin(data_norm[i][:,1]-newbase),0]
             header_cooling[i] += '# Peak position is at {:.1f} degC'.format(Tmin)
             DCp = (post_i - pre_i) + (post_s-pre_s)*Tmin
+            DCp_err = (post_i_err - pre_i_err) + (post_s_err-pre_s_err)*Tmin
             print('Peak position is at {:.1f} degC'.format(Tmin))
             if 'Mw' in params:
-                print('Calculated Delta Cp at the peak position is {:.2g} J/K/mol'.format(DCp))
-                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/mol. \n'.format(DCp)
+                print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol.'.format(DCp, abs(DCp_err)))
+                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol. \n'.format(DCp, abs(DCp_err))
             else:
-                print('Calculated Delta Cp at the peak position is {:.2g} J/K/g'.format(DCp))
-                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} J/K/g. \n'.format(DCp)
+                print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g.'.format(DCp, abs(DCp_err)))
+                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g. \n'.format(DCp, abs(DCp_err))
                 
         header_cooling[i] += 50*'#' + '\n'
     
@@ -859,9 +873,9 @@ def export_final_data(files, data, params):
         for file in data:
             filename = os.path.join(os.path.join(params['Folder'],'Output'), 'exp-' + str(file)) 
             if 'Mw' in params:
-                s = 'Temp/ [degC] \t CP-baseline / [J/K/mol] \t CP [J/K/mol] \t baseline [J/K/mol] \t H [J/mol]'
+                s = 'Temp/ [degC] \t CP-baseline / [J/K/mol] \t CP [J/K/mol] \t baseline [J/K/mol] \t error_baseline [J/K/mol] \t H [J/mol]'
             else:
-                s = 'Temp/ [degC] \t CP-baseline / [J/K/g] \t CP [J/K/g] \t baseline [J/K/g] \t H [J/g]'
+                s = 'Temp/ [degC] \t CP-baseline / [J/K/g] \t CP [J/K/g] \t baseline [J/K/g]  \t error_baseline [J/K/g] \t H [J/g]'
             
             with open(filename, 'a') as f:
                 np.savetxt(f, data[file], delimiter='\t', header=s)
@@ -871,13 +885,13 @@ def export_final_data(files, data, params):
     def write_header(header_heating, header_cooling, files, params):
         for i in files['S_heating']:
             filename = os.path.join(os.path.join(params['Folder'],'Output'), 'exp-' + str(i))
-            with open(filename, 'w+') as f:
+            with open(filename, 'w') as f:
                 f.write(header_heating[i])
                 
                 
         for i in files['S_cooling']:
             filename = os.path.join(os.path.join(params['Folder'],'Output'), 'exp-' + str(i))
-            with open(filename, 'w+') as f:
+            with open(filename, 'w') as f:
                 f.write(header_cooling[i])
                 
         return None
