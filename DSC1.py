@@ -50,8 +50,8 @@ def read_files(version, date, sample):
     sc += '# using python version {}, scipy version {} and numpy version {}. \n'.format(sys.version[:5], scipy.__version__, np.__version__)
     sh = '# Data treated with pyDSC, version {} from {}. \n'.format(version, date) #heading for heating curves
     sh += '# using python version {}, scipy version {} and numpy version {}. \n'.format(sys.version[:5], scipy.__version__, np.__version__)
-    sc += '# Please cite the work: J. Ther. Anal. Calorimetry, 145, 403-409 (2021) \n'
-    sh += '# Please cite the work: J. Ther. Anal. Calorimetry, 145, 403-409 (2021) \n'
+    sc += '# Please cite the work: J. Therm. Anal. Calorim., 145, 403-409 (2021) \n'
+    sh += '# Please cite the work: J. Therm. Anal. Calorim., 145, 403–409 (2021) \n'
     sc += 50*'#' + '\n'
     sh += 50*'#' + '\n'
 
