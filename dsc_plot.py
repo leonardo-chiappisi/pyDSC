@@ -180,6 +180,40 @@ def plot_final_data(files, data, params, filename):
     plt.savefig(filename)
     plt.close(fig)
     
+def plot_uncut_data(files, data, params, sample):
+    
+    def applyPlotStyle(title, ax1, ax2, Mw = True):
+        ax1.set_xlabel('Temperature / °C')
+        if Mw:
+            ax1.set_ylabel('Heat capacity (heating) / J K$^{-1}$ mol$^{-1}$')
+            ax2.set_ylabel('Heat capacity (cooling) / J K$^{-1}$ mol$^{-1}$')
+            
+        else:
+            ax1.set_ylabel('Heat capacity (heating) / J K$^{-1}$ g$^{-1}$')
+            ax2.set_ylabel('Heat capacity (cooling) / J K$^{-1}$ g$^{-1}$')
+        
+        ax1.set_title(title)
+        ax1.yaxis.label.set_color('red')
+        ax1.tick_params(axis='y', colors='red')
+        ax2.yaxis.label.set_color('blue')
+        ax2.tick_params(axis='y', colors='blue')
+        
+        
+    fig, ax1 = plt.subplots(1,1,figsize=(7,4))
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    
+    applyPlotStyle(sample, ax1, ax2, Mw = 'Mw' in params)
+    
+    for file in sorted(data):
+        if file in files['S_heating']:
+            ax1.plot(data[file][:,0], data[file][:,1], color='red')
+        if file in files['S_cooling']:
+            ax2.plot(data[file][:,0], data[file][:,1], color='blue')
+            
+    filename = os.path.join(os.path.join(params['Folder'],'Output'), sample + '_uncut_data.pdf') 
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close(fig)
     
     
 def plot_baseline_data(files, data, params, filename):

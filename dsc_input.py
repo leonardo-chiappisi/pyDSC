@@ -32,34 +32,93 @@ unit_power: mW		#Unit in which the heatflow is given, can be uW (microWatt), mW 
 '''
 
 
-samples['Sample1'] = {'Folder': 'rawdata',
-                      'Heating_runs': ['PDMAEMA_3wt.dat'],
-                      'Cooling_runs': [], 
-                      'Empty_cell_heat_runs': ['PBS_in_D2O.dat'], 
+# samples['Myoglobin_cell1_first_run'] = {'Folder': 'rawdata/John_White',
+#                       'Heating_runs': ['myoglobin_cell1_scan2.txt'],
+#                       'Cooling_runs': ['myoglobin_cell1_scan3.txt'], 
+#                       'Empty_cell_heat_runs': [], 
+#                       'Empty_cell_cool_runs': [], 
+#                       'Buffer_heat_runs': [],
+#                       'Buffer_cool_runs': [],
+#                       'Dataformat': 'TA_temp_power_time', 
+#                       # 'Header_length': 1,
+#                       'mass_s': 502.8,
+#                       'mass_r': 0.0,
+#                       'mass_bb': 0.0,
+#                       's_wt': 0.0072,
+#                       # 'Mw': 157.2, #optional, comment out if not needed
+#                       'ROI_h': [35, 56],
+#                       'ROI_c': [62, 82],
+#                       'ROP_h': [46 , 53],
+#                       'ROP_c': [70, 78],
+#                       'Scanrate_h': 0.5,
+#                       'Scanrate_c': 0.5,
+#                       'bins': 10,
+#                       'Input': 'exo-down',
+#                       'Output': 'exo-down',
+#                       'Exo_in_plot': True, #or False	
+#                       'unit_time': 's',		
+#                       'unit_temp': 'degC',
+#                       'unit_power': 'uW'
+#                       }
+
+# samples['Myoglobin_cell1_other_runs'] = {'Folder': 'rawdata/John_White',
+#                       'Heating_runs': ['myoglobin_cell1_scan4.txt', 'myoglobin_cell1_scan6.txt', 'myoglobin_cell1_scan8.txt', 'myoglobin_cell1_scan10.txt'],
+#                       'Cooling_runs': ['myoglobin_cell1_scan5.txt', 'myoglobin_cell1_scan7.txt', 'myoglobin_cell1_scan9.txt', 'myoglobin_cell1_scan11.txt'],
+#                       'Empty_cell_heat_runs': [], 
+#                       'Empty_cell_cool_runs': [], 
+#                       'Buffer_heat_runs': [],
+#                       'Buffer_cool_runs': [],
+#                       'Dataformat': 'TA_temp_power_time', 
+#                       # 'Header_length': 1,
+#                       'mass_s': 502.8,
+#                       'mass_r': 0.0,
+#                       'mass_bb': 0.0,
+#                       's_wt': 0.0072,
+#                       # 'Mw': 157.2, #optional, comment out if not needed
+#                       'ROI_h': [78, 94],
+#                       'ROI_c': [62, 82],
+#                       'ROP_h': [82 , 90],
+#                       'ROP_c': [65, 75],
+#                       'Scanrate_h': 0.5,
+#                       'Scanrate_c': 0.5,
+#                       'bins': 10,
+#                       'Input': 'exo-down',
+#                       'Output': 'exo-down',
+#                       'Exo_in_plot': True, #or False	
+#                       'unit_time': 's',		
+#                       'unit_temp': 'degC',
+#                       'unit_power': 'uW'
+#                       }
+
+samples['Myoglobin_cell2_runs'] = {'Folder': 'rawdata/John_White',
+                      'Heating_runs': ['myoglobin_cell2_scan2.txt', 'myoglobin_cell2_scan4.txt', 'myoglobin_cell2_scan6.txt', 'myoglobin_cell2_scan8.txt', 'myoglobin_cell2_scan10.txt'],
+                      'Cooling_runs': ['myoglobin_cell2_scan3.txt', 'myoglobin_cell2_scan5.txt', 'myoglobin_cell2_scan7.txt', 'myoglobin_cell2_scan9.txt', 'myoglobin_cell2_scan11.txt'],
+                      'Empty_cell_heat_runs': [], 
                       'Empty_cell_cool_runs': [], 
                       'Buffer_heat_runs': [],
                       'Buffer_cool_runs': [],
                       'Dataformat': 'TA_temp_power_time', 
-                      'Header_length': 1,
-                      'mass_s': 550.0,
+                      # 'Header_length': 1,
+                      'mass_s': 502.8,
                       'mass_r': 0.0,
                       'mass_bb': 0.0,
-                      's_wt': 0.0298,
-                      'Mw': 157.2, #optional, comment out if not needed
-                      'ROI_h': [25.0, 90.0],
-                      'ROI_c': [12.0, 35.0],
-                      'ROP_h': [33.0 , 85.0],
-                      'ROP_c': [15, 29],
-                      'Scanrate_h': 1.0,
+                      's_wt': 0.0072,
+                      # 'Mw': 157.2, #optional, comment out if not needed
+                      'ROI_h': [78, 94],
+                      'ROI_c': [60, 80],
+                      'ROP_h': [82 , 90],
+                      'ROP_c': [65, 75],
+                      'Scanrate_h': 0.5,
                       'Scanrate_c': 0.5,
                       'bins': 10,
                       'Input': 'exo-down',
                       'Output': 'exo-down',
-                      'Exo_in_plot': False, #or False	
+                      'Exo_in_plot': True, #or False	
                       'unit_time': 's',		
                       'unit_temp': 'degC',
                       'unit_power': 'uW'
                       }
+
 
 # samples['Sample2_normal'] = {'Folder': 'C2',
 #                       'Heating_runs': ['C2_2Heat_mid.txt', 'C2_4Heat_mid.txt', 'C2_6Heat_mid.txt'],

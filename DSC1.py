@@ -10,17 +10,17 @@ import sys
 from math import log
 from scipy import interpolate, integrate
 from scipy.stats import linregress
+import matplotlib.pyplot as plt
 import scipy
 if scipy.__version__<'1.8':
     print('must have scipy version 1.8 or greater to estimate error on CP and DH')
 
 encodings = [ 'utf-8', 'utf-16', 'latin1', 'cp1252']
-header_heating = dict() #Dictionary containing the headers of the exported heating files
-header_cooling = dict() #Dictionary containing the headers of the exported cooling files
 
 
 
-def read_files(version, date, sample):
+
+def read_files(version, date, sample, header_heating, header_cooling):
     ''' Function which imports all needed data: heating and cooling cycles as well as correction files: 
     Buffer-buffer thermograms and empty cell corrections. The name of the files are stored in the sample dictionary. 
     '''
@@ -50,7 +50,7 @@ def read_files(version, date, sample):
     sc += '# using python version {}, scipy version {} and numpy version {}. \n'.format(sys.version[:5], scipy.__version__, np.__version__)
     sh = '# Data treated with pyDSC, version {} from {}. \n'.format(version, date) #heading for heating curves
     sh += '# using python version {}, scipy version {} and numpy version {}. \n'.format(sys.version[:5], scipy.__version__, np.__version__)
-    sc += '# Please cite the work: J. Therm. Anal. Calorim., 145, 403-409 (2021) \n'
+    sc += '# Please cite the work: J. Therm. Anal. Calorim., 145, 403–409 (2021) \n'
     sh += '# Please cite the work: J. Therm. Anal. Calorim., 145, 403–409 (2021) \n'
     sc += 50*'#' + '\n'
     sh += 50*'#' + '\n'
@@ -100,7 +100,7 @@ def read_files(version, date, sample):
 
 
 
-def read_params(input_data):
+def read_params(input_data, header_heating, header_cooling):
     '''Function which reads the parameter input firles and extracts all relevant informations, i.e., sample mass, mw, temperature
     region of interests, regions where the baseline will be evaluated, etc.    
     '''    
@@ -154,7 +154,7 @@ def read_params(input_data):
     return params
 
 
-def extract_data(files, params, *args, **kwargs):
+def extract_data(files, params, header_heating, header_cooling, *args, **kwargs):
     ''' Extract the time, temperature, heatflow data from the data files as experted from the instrument in the ascii format. 
     Returns a dictionary containing all data files within the region of interest and binned according to bins.     
     The user needs to specify the data format (i.e., from setaram with 4 columns  "Index, time, temperature, heatflow") in the settings_files. 
@@ -168,6 +168,7 @@ def extract_data(files, params, *args, **kwargs):
     print(15*'*', 'Reading data files', 15*'*')
     data = {} #Creation of empty dictionary, where the datasets will be stored, indexed by their filename. 
     dataraw = {} #Creation of empty dictionary, where the datasets will be stored, indexed by their filename. 
+    data_uncut = {} #Creation of empty dictionary, where the normalized, binned data will be stored, indexed by their filename. 
     for key in files: 
         for j in files[key]: #the two for loops run over all files defined in the file_input definition file. 
             if j:  #this if sentence is made to avoid trying to read empty key values. 
@@ -285,7 +286,7 @@ def extract_data(files, params, *args, **kwargs):
                         # tmp[2,:] /= 1000 #conversion from uWatt into mW 
                     # except UnboundLocalError:
                         # sys.exit('Error loading the input files.')
-                
+
                 try:
                     _ = tmp.shape
                 except UnboundLocalError:
@@ -293,30 +294,52 @@ def extract_data(files, params, *args, **kwargs):
                     
                 if 'heating' in key:
                     mask = ((float(params['ROI_h'][0]) < tmp[1,:]) & (float(params['ROI_h'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
+                    if any(mask): None
+                    else: raise Exception('The selected region of interest in the heating curve is not compatible with the range of temperature of the data, going from {} to {} degC'.format(np.min(tmp[1,:]), np.max(tmp[1,:])))
                 elif 'cooling' in key:
                     mask = ((float(params['ROI_c'][0]) < tmp[1,:]) & (float(params['ROI_c'][1]) > tmp[1,:])) #defines a mask with the points where the temperature is in the region of interest. 
+                    if any(mask): None
+                    else: raise Exception('The selected region of interest in the cooling curve is not compatible with the range of temperature of the data, going from {} to {} degC'.format(np.min(tmp[1,:]), np.max(tmp[1,:])))
                 tmp2 = tmp[:,mask].copy() #creates the data array with only the relevant data points. Whatever is outside the region of interest, is not used any longer.                 
+                tmp_uncut = tmp.copy()
+
                 # print(tmp2)
                 
                 if params['Input'] != params['Output']: #renormalized from exo-up to exo-down convention, or viceversa. 
                     tmp2[2,:] *= -1
+                    tmp_uncut[2,:] *= -1
                 
                 if params['unit_time'] == 'min': #Converts time from minutes to seconds
                     tmp2[0,:] *= 60
+                    tmp_uncut[0,:] *= 60
                 
                 if params['unit_power'] == 'uW': #Converts the heatflow from uW into mW
                     tmp2[2,:] /= 1000
+                    tmp_uncut[2,:] /= 1000
                     
                 if params['unit_power'] == 'W': #Converts the heatflow from W into mW
                     tmp2[2,:] *= 1000
+                    tmp_uncut[2,:] *= 1000
 
-        
+                if 'cooling' in key:
+
+                    tmp_uncut = tmp_uncut[:,tmp_uncut[1,:]<np.nanmax(tmp_uncut[1,:])-5.0] #discarding the first five degrees of the curve
+                    tmp2 = np.flip(tmp2, axis=1)
+                    tmp_uncut = np.flip(tmp_uncut, axis=1)
+                else:
+                    tmp_uncut = tmp_uncut[:,tmp_uncut[1,:]>np.nanmin(tmp_uncut[1,:])+5.0] #discarding the first five degrees of the curve
+                
+                
+                
+                
                 data_set = binning(tmp2, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
+                data_set_uncut = binning(tmp_uncut, params)  #the data are binned according to the size defined by bins. No binning is performed if binsize is 1 or less. 
                 
-                
-            
+
+            data_set_uncut = data_set_uncut[:,~np.isnan(data_set_uncut).any(axis=0)]
             data[j] = data_set
             dataraw[j] = tmp2
+            data_uncut[j] = data_set_uncut
             
             # for j in files[key]:
             if params['Input'] != params['Output']: #renormalized from exo-up to exo-down convention, or viceversa. 
@@ -334,7 +357,7 @@ def extract_data(files, params, *args, **kwargs):
                     header_cooling[file] += '# Dafile read in format {} with encoding {} \n'.format(params['Dataformat'], code)
                 
     print('\n')
-    return data, dataraw #a dictionary containing all data, already cut, binned, and with the heatrate calculated. 
+    return data, dataraw, data_uncut #a dictionary containing all data, already cut, binned, and with the heatrate calculated. 
 
 
 def binning(data, params):
@@ -353,10 +376,10 @@ def binning(data, params):
         hrate = np.diff(data_binned[1,:])/np.diff(data_binned[0,:]) 
     else:
         hrate = np.empty(len(stdev)-1)
-    return np.concatenate([np.delete(data_binned, -1, axis=1), np.append([stdev[:-1]], [hrate], axis=0)], axis=0) 
+    return np.concatenate([np.delete(data_binned, 0, axis=1), np.append([stdev[:-1]], [hrate], axis=0)], axis=0) 
 
 
-def check_data(data, files, params):
+def check_data(data, files, params, header_heating, header_cooling):
     ''' Functions to check that the information in the data files and those provided in the input files are consistent.
     Eg. temperature increases in the heating scans, temperature range and ROI are consistent, etc. TODO
     It should also check wether all files are present in the rawdata folder. '''
@@ -392,7 +415,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
                     
 #veryfies that the cooling files are really a heating file. If not, program stops.                
             if 'cooling' in key:
-                if (data[i][1,1] < data[i][1,-1]):
+                if (data[i][1,1] > data[i][1,-1]):
                     raise Exception('Error: {} is not a cooling file!'.format(i))
                     
 #Verification for a constant heatrate and if it is consistent with the one provided in parameter file. 
@@ -658,7 +681,7 @@ def normalize_sampleruns(files, data, params):
         data_norm[i] = np.column_stack((data[i][1,:], data[i][2,:]/(hr*sample_norm)))
     return data_norm
 
-def baseline(data_norm, params, files):
+def baseline(data_norm, params, files, header_heating, header_cooling):
     print('\n', 15*'*', 'Baseline substraction', 15*'*')
     data_baseline = dict()
     
@@ -776,10 +799,12 @@ def baseline(data_norm, params, files):
         header_heating[i] += 50*'#' + '\n'
                 
     for i in files['S_cooling']:
+        # data_norm[i] = data_norm[i][::-1,:]
+
         #liner fit of the regions before (pre) and after (post) the peak is performed. 
         pre = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0], :]
         post = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0], :]
-        
+        # print(pre, post)
         pre_linreg = linregress(pre)
         pre_s, pre_i, pre_s_err, pre_i_err = pre_linreg.slope, pre_linreg.intercept, pre_linreg.stderr, pre_linreg.intercept_stderr
         post_linreg = linregress(post)
@@ -787,6 +812,7 @@ def baseline(data_norm, params, files):
         
         #first baseline is calculated as the spline connecting all the points before and the after the peak. 
         tmp =  data_norm[i][np.logical_or(float(params['ROP_c'][0]) > data_norm[i][:,0], float(params['ROP_c'][1]) < data_norm[i][:,0]), :]
+        
         tck = interpolate.interp1d(tmp[:,0], tmp[:,1])
         base1 = tck(data_norm[i][:,0])
         #first integration using the spline as first baseline. H is the cumulative integral, the area under the curve will be given by H[-1]
@@ -795,7 +821,7 @@ def baseline(data_norm, params, files):
         B_pre = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0],:1]*pre_s + pre_i
         B_post = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0],:1]*post_s + post_i
 
-
+ 
         Hst1 = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0]][:,1] - B_pre[:,0] #standard deviation before peak region
         Hst2 = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0]][:,1] - B_post[:,0] #standard deviation after peak region
         Hst = np.std(np.append(Hst1, Hst2)) #standard deviation of Cp calculated in baseline regions. 
@@ -813,12 +839,11 @@ def baseline(data_norm, params, files):
         print(s)
         while  itermax < 100:
             itermax += 1
-            newbase = base(pre_s, pre_i, post_s, post_i, H[::-1]/H[-1], data_norm[i][:,0])
+            newbase = base(pre_s, pre_i, post_s, post_i, H/H[-1], data_norm[i][:,0])
             err_baseline = err_base(pre_s_err, pre_i_err, post_s_err, post_i_err, H/H[-1], data_norm[i][:,0])
             newH = integrate.cumtrapz(data_norm[i][:,1]-newbase, data_norm[i][:,0], initial=0.0)
             DH = H[-1] - newH[-1]
             H = newH
-            
             errH = (integrate.cumtrapz(err_baseline**2, data_norm[i][:,0], initial=0.0)[-1])**0.5
             
         if 'Mw' in params:
@@ -842,10 +867,10 @@ def baseline(data_norm, params, files):
             
             if 'Mw' in params:
                 print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol.'.format(DCp, abs(DCp_err)))
-                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol. \n'.format(DCp, abs(DCp_err))
+                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol. \n'.format(DCp, abs(DCp_err))
             else:
                 print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g.'.format(DCp, abs(DCp_err)))
-                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g. \n'.format(DCp, abs(DCp_err))
+                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g. \n'.format(DCp, abs(DCp_err))
                 
         if H[-1] > 0: #if process is exothermic
             Tmin = data_norm[i][np.argmin(data_norm[i][:,1]-newbase),0]
@@ -855,16 +880,16 @@ def baseline(data_norm, params, files):
             print('Peak position is at {:.1f} degC'.format(Tmin))
             if 'Mw' in params:
                 print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol.'.format(DCp, abs(DCp_err)))
-                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol. \n'.format(DCp, abs(DCp_err))
+                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol. \n'.format(DCp, abs(DCp_err))
             else:
                 print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g.'.format(DCp, abs(DCp_err)))
-                header_heating[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g. \n'.format(DCp, abs(DCp_err))
+                header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g. \n'.format(DCp, abs(DCp_err))
                 
         header_cooling[i] += 50*'#' + '\n'
     
     return data_baseline
 
-def export_final_data(files, data, params):
+def export_final_data(files, data, params, header_heating, header_cooling):
     ''' Function which exports the final data-set.'''
     print('\n', 15*'*', 'Exporting the treated data-set', 15*'*')
     
@@ -885,18 +910,18 @@ def export_final_data(files, data, params):
     def write_header(header_heating, header_cooling, files, params):
         for i in files['S_heating']:
             filename = os.path.join(os.path.join(params['Folder'],'Output'), 'exp-' + str(i))
+            
             with open(filename, 'w') as f:
-                f.write(header_heating[i])
-                
+                f.write(header_heating[i])                
                 
         for i in files['S_cooling']:
             filename = os.path.join(os.path.join(params['Folder'],'Output'), 'exp-' + str(i))
             with open(filename, 'w') as f:
-                f.write(header_cooling[i])
+                f.write(header_cooling[i])  
+
                 
         return None
-    
-        # print(header_heating)
+
     write_header(header_heating, header_cooling, files, params)           
     for i in files['S_heating']:
         export(i, data, params)
@@ -905,3 +930,58 @@ def export_final_data(files, data, params):
         
 
     
+def export_uncut_data(files, data, params, header_heating, header_cooling):
+    ''' Function which exports the final data-set.'''
+    print('\n', 15*'*', 'Exporting the uncut data-set', 15*'*')
+    
+    def export(file, data, params):
+            print(file)
+            filename = os.path.join(os.path.join(params['Folder'],'Output'), 'raw_norm-' + str(file)) 
+            if 'Mw' in params:
+                s = 'Temp/ [degC]  \t CP [J/K/mol]'
+            else:
+                s = 'Temp/ [degC] \t CP [J/K/g]'
+            
+            # print(np.shape(data[file]))
+            with open(filename, 'a') as f:
+                np.savetxt(f, data, delimiter='\t', header=s)
+                print('yeppy')
+        
+            return None
+    
+    def write_header(header_heating, header_cooling, files, params):
+        for i in files['S_heating']:
+            filename = os.path.join(os.path.join(params['Folder'],'Output'), 'raw_norm-' + str(i))
+            header = ''
+            for line in header_heating[i].splitlines():
+                if 'Peak is located' not in line:
+                    if 'degC were analyzed' not in line:
+                        header += line + '\n'
+            header += '##################################################\n'
+            
+            with open(filename, 'w') as f:
+                f.write(header)                
+                
+        for i in files['S_cooling']:
+            filename = os.path.join(os.path.join(params['Folder'],'Output'), 'raw_norm-' + str(i))
+            header = ''
+            for line in header_cooling[i].splitlines():
+                if 'Peak is located' not in line:
+                    if 'degC were analyzed' not in line:
+                        header += line + '\n'
+            header += '##################################################\n'
+            
+            with open(filename, 'w') as f:
+                f.write(header)  
+
+                
+        return None
+
+    write_header(header_heating, header_cooling, files, params)           
+    for i in files['S_heating']:
+        # print(i)
+        export(i, data[i], params)
+    for i in files['S_cooling']:
+        # print(i)
+        export(i, data[i], params)
+        
