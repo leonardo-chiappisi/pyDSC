@@ -713,7 +713,9 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
         pre_s, pre_i, pre_s_err, pre_i_err = pre_linreg.slope, pre_linreg.intercept, pre_linreg.stderr, pre_linreg.intercept_stderr
         post_linreg = linregress(post)
         post_s, post_i,post_s_err, post_i_err = post_linreg.slope, post_linreg.intercept, post_linreg.stderr, post_linreg.intercept_stderr
-        
+        # print('fit parameters of the linear slope after the heating peak are')
+        # print('intercept = {} +- {}'.format(post_i, post_i_err))
+        # print('slope= {} +- {}'.format(post_s, post_s_err))
         
         #first baseline is calculated as the spline connecting all the points before and the after the peak. 
         tmp =  data_norm[i][np.logical_or(float(params['ROP_h'][0]) > data_norm[i][:,0], float(params['ROP_h'][1]) < data_norm[i][:,0]), :]
@@ -895,7 +897,6 @@ def export_final_data(files, data, params, header_heating, header_cooling):
     
    
     def export(file, data, params):
-        for file in data:
             filename = os.path.join(os.path.join(params['Folder'],'Output'), 'exp-' + str(file)) 
             if 'Mw' in params:
                 s = 'Temp/ [degC] \t CP-baseline / [J/K/mol] \t CP [J/K/mol] \t baseline [J/K/mol] \t error_baseline [J/K/mol] \t H [J/mol]'
@@ -904,8 +905,9 @@ def export_final_data(files, data, params, header_heating, header_cooling):
             
             with open(filename, 'a') as f:
                 np.savetxt(f, data[file], delimiter='\t', header=s)
+                print('File {} exported correctly'.format(filename))
         
-        return None
+
     
     def write_header(header_heating, header_cooling, files, params):
         for i in files['S_heating']:

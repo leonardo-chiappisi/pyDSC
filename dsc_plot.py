@@ -279,9 +279,9 @@ def plot_alpha(files, data, params, filename):
 
     for file in sorted(data):
         if file in files['S_cooling']:
-            ax.plot(data[file][:,0], 1-data[file][:,4]/data[file][-1,4],  label=file)
+            ax.plot(data[file][:,0], 1-data[file][:,5]/data[file][-1,5],  label=file)
         else:
-            ax.plot(data[file][:,0], data[file][:,4]/data[file][-1,4],  label=file)
+            ax.plot(data[file][:,0], data[file][:,5]/data[file][-1,5],  label=file)
 
     
     plt.legend()
