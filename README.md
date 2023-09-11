@@ -6,14 +6,12 @@ The program normalizes the rawdata, corrects for the empty cell and buffer contr
 
 ## Usage
 
-To run the program, you need to download the files *'DSC1.py'*, *'dsc_plot.py'*, and *'pyDSC.py'*. In the same folder, save the files 'Files.txt' and 'Input_params.txt'. Create a folder called rawdata and Output. In the folder 'rawdata', please save all the files to be analyzed: the samples and eventual reference measurements (buffer-buffer and empty cell runs). Refer to the manual for more detailed information. 
-
-Modify the files 'Files.txt' and 'Input_params.txt' according to your needs. 
+To run the program, you need to download the files *'DSC1.py'*, *'dsc_plot.py'*, *'dsc_input.py'*, and *'pyDSC.py'*. In the same folder, save the files 'Files.txt' and 'Input_params.txt'.  Modify the file 'dsc_input.py' according to your needs. Please refer to the Handbook for further details. 
 
 To run the program, execute the python script pyDSC.py with:
 
 ```
-python3 pyDSC.py
+python3 pyDSC_vx.x.x..py
 ```
 
 The script is based on python3 and requires the numpy and scipy packages. 
