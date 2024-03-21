@@ -756,7 +756,8 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
             
             
             errH = (integrate.cumtrapz(err_baseline**2, data_norm[i][:,0], initial=0.0)[-1])**0.5
-            
+        
+
         if 'Mw' in params:
             print('Iteration number {}, enthalpy variation of {:3g} J/mol, final value of DH is {:.5g} +- {:.2g} kJ/mol'.format(itermax, abs(DH/H[-1]), H[-1]/1e3, abs(errH)/1e3))
             header_heating[i] += '# DH of the heating run is {:.5g} +- {:.2g} kJ/mol. \n'.format(*roundError(H[-1]/1e3, abs(errH/1e3)))
@@ -861,11 +862,17 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
         
         #determination of maximum or minimum of temperature and Delta CP at Tmax (or Tmin)
         if H[-1] < 0: #if process is endothermic
-            Tmax = data_norm[i][np.argmax(data_norm[i][:,1]-newbase),0] 
-            header_cooling[i] += '# Peak position is at {:.1f} degC. \n'.format(Tmax)
-            DCp = (post_i - pre_i) + (post_s-pre_s)*Tmax
-            DCp_err = (post_i_err - pre_i_err) + (post_s_err-pre_s_err)*Tmax
-            print('Peak position is at {:.1f} degC'.format(Tmax))
+            # print(20*'/')
+            # print(data_norm[i][:,1]-newbase)
+            # print(np.argmax(data_norm[i][:,1]-newbase))
+            # print(data_norm[i][:,0])
+            # print(data_norm[i][np.argmax(data_norm[i][:,1]-newbase),0])
+            # print(20*'/')
+            Tmin = data_norm[i][np.argmin(data_norm[i][:,1]-newbase),0] 
+            header_cooling[i] += '# Peak position is at {:.1f} degC. \n'.format(Tmin)
+            DCp = (post_i - pre_i) + (post_s-pre_s)*Tmin
+            DCp_err = (post_i_err - pre_i_err) + (post_s_err-pre_s_err)*Tmin
+            print('Peak position is at {:.1f} degC'.format(Tmin))
             
             if 'Mw' in params:
                 print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol.'.format(DCp, abs(DCp_err)))
@@ -875,11 +882,11 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
                 header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/g. \n'.format(DCp, abs(DCp_err))
                 
         if H[-1] > 0: #if process is exothermic
-            Tmin = data_norm[i][np.argmin(data_norm[i][:,1]-newbase),0]
-            header_cooling[i] += '# Peak position is at {:.1f} degC'.format(Tmin)
-            DCp = (post_i - pre_i) + (post_s-pre_s)*Tmin
-            DCp_err = (post_i_err - pre_i_err) + (post_s_err-pre_s_err)*Tmin
-            print('Peak position is at {:.1f} degC'.format(Tmin))
+            Tmax = data_norm[i][np.argmax(data_norm[i][:,1]-newbase),0]
+            header_cooling[i] += '# Peak position is at {:.1f} degC'.format(Tmax)
+            DCp = (post_i - pre_i) + (post_s-pre_s)*Tmax
+            DCp_err = (post_i_err - pre_i_err) + (post_s_err-pre_s_err)*Tmax
+            print('Peak position is at {:.1f} degC'.format(Tmax))
             if 'Mw' in params:
                 print('Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol.'.format(DCp, abs(DCp_err)))
                 header_cooling[i] += '# Calculated Delta Cp at the peak position is {:.2g} +- {:.0g} J/K/mol. \n'.format(DCp, abs(DCp_err))
