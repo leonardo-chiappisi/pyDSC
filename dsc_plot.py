@@ -17,10 +17,19 @@ def plot_raw_data(files, data, params, filename):
     ''' Plots the raw_data'''
     
     print('\n', 15*'*', 'Plotting the raw data', 15*'*')
-    
+    # print(params)
     def applyPlotStyle(title, idx):
-        axes[idx[0], idx[1]].set_xlabel('Temperature / °C')
-        axes[idx[0], idx[1]].set_ylabel('Heat flow / 10$^{-3}$ W')
+        if params['unit_temp'] == 'degC':
+            axes[idx[0], idx[1]].set_xlabel('Temperature / °C')
+        if params['unit_temp'] == 'K':
+            axes[idx[0], idx[1]].set_xlabel('Temperature / K')
+        if params['unit_power'] == 'uW':
+            axes[idx[0], idx[1]].set_ylabel('Heat flow / 10$^{-6}$ W')
+        elif params['unit_power'] == 'mW':
+            axes[idx[0], idx[1]].set_ylabel('Heat flow / 10$^{-3}$ W')
+        elif params['unit_power'] == 'W':
+            axes[idx[0], idx[1]].set_ylabel('Heat flow / W')
+            
         axes[idx[0], idx[1]].set_title(title)
         #axes[idx[0], idx[1]].legend(loc='upper left')
         if params['Exo_in_plot'] is True:

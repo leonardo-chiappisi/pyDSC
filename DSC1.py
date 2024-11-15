@@ -722,7 +722,7 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
         tck = interpolate.interp1d(tmp[:,0], tmp[:,1])
         base1 = tck(data_norm[i][:,0])
         #first integration using the spline as first baseline. H is the cumulative integral, the area under the curve will be given by H[-1]
-        H = integrate.cumtrapz(data_norm[i][:,1]-base1, data_norm[i][:,0], initial=0.0) 
+        H = integrate.cumulative_trapezoid(data_norm[i][:,1]-base1, data_norm[i][:,0], initial=0.0) 
         #Standard deviation in the region before and after the peak, used to limit the loops for optimizing the baseline. 
         B_pre = data_norm[i][float(params['ROP_h'][0]) > data_norm[i][:,0],:1]*pre_s + pre_i
         B_post = data_norm[i][float(params['ROP_h'][1]) < data_norm[i][:,0],:1]*post_s + post_i
@@ -749,13 +749,13 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
             itermax += 1
             newbase = base(pre_s, pre_i, post_s, post_i, H/H[-1], data_norm[i][:,0])
             err_baseline = err_base(pre_s_err, pre_i_err, post_s_err, post_i_err, H/H[-1], data_norm[i][:,0])
-            newH = integrate.cumtrapz(data_norm[i][:,1]-newbase, data_norm[i][:,0], initial=0.0)
+            newH = integrate.cumulative_trapezoid(data_norm[i][:,1]-newbase, data_norm[i][:,0], initial=0.0)
             
             DH = H[-1] - newH[-1]
             H = newH
             
             
-            errH = (integrate.cumtrapz(err_baseline**2, data_norm[i][:,0], initial=0.0)[-1])**0.5
+            errH = (integrate.cumulative_trapezoid(err_baseline**2, data_norm[i][:,0], initial=0.0)[-1])**0.5
         
 
         if 'Mw' in params:
@@ -819,7 +819,7 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
         tck = interpolate.interp1d(tmp[:,0], tmp[:,1])
         base1 = tck(data_norm[i][:,0])
         #first integration using the spline as first baseline. H is the cumulative integral, the area under the curve will be given by H[-1]
-        H = integrate.cumtrapz(data_norm[i][:,1]-base1, data_norm[i][:,0], initial=0.0) 
+        H = integrate.cumulative_trapezoid(data_norm[i][:,1]-base1, data_norm[i][:,0], initial=0.0) 
         #Standard deviation in the region before and after the peak, used to limit the loops for optimizing the baseline. 
         B_pre = data_norm[i][float(params['ROP_c'][0]) > data_norm[i][:,0],:1]*pre_s + pre_i
         B_post = data_norm[i][float(params['ROP_c'][1]) < data_norm[i][:,0],:1]*post_s + post_i
@@ -844,10 +844,10 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
             itermax += 1
             newbase = base(pre_s, pre_i, post_s, post_i, H/H[-1], data_norm[i][:,0])
             err_baseline = err_base(pre_s_err, pre_i_err, post_s_err, post_i_err, H/H[-1], data_norm[i][:,0])
-            newH = integrate.cumtrapz(data_norm[i][:,1]-newbase, data_norm[i][:,0], initial=0.0)
+            newH = integrate.cumulative_trapezoid(data_norm[i][:,1]-newbase, data_norm[i][:,0], initial=0.0)
             DH = H[-1] - newH[-1]
             H = newH
-            errH = (integrate.cumtrapz(err_baseline**2, data_norm[i][:,0], initial=0.0)[-1])**0.5
+            errH = (integrate.cumulative_trapezoid(err_baseline**2, data_norm[i][:,0], initial=0.0)[-1])**0.5
             
         if 'Mw' in params:
             print('Iteration number {}, enthalpy variation of {:.3g} J/mol, final value of DH is {:.5g} +- {:.2g} J/mol'.format(itermax, abs(DH/H[-1]), H[-1], abs(errH)))
