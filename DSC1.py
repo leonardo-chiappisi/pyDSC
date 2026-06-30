@@ -507,7 +507,7 @@ and is not consistent with the one provided in the input parameter file of {:.2g
         header_cooling[key] += '# Peak is located between {} and {} degC. \n'.format(params['ROP_c'][0], params['ROP_c'][1])
         
     if W_counter == 0 and D_counter == 0:
-        print('Check performed sucessfully. No errors encountered!')    
+        print('Check performed successfully. No errors encountered!')    
     else:
         print('\n', 5*'*', '{} Warnings have arisen during file check!'.format(W_counter), 5*'*')
         print(5*'*', '{} Files will be ignored in the calculations!'.format(D_counter), 5*'*')
