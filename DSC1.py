@@ -740,7 +740,7 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
 
 
 
-        DH = H[-1] #variation in area between sucessive loops. The first value is set to the total area. 
+        DH = H[-1] #variation in area between successive loops. The first value is set to the total area. 
         itermax = 0
         newbase = base1
         s = '\nBaseline substraction for file {}'.format(i)
@@ -833,7 +833,7 @@ def baseline(data_norm, params, files, header_heating, header_cooling):
         errH = Hst*delta/2*np.sqrt(2.*(len(data_norm[i][:,0])-Ns))
         
         
-        DH = H[-1] #variation in area between sucessive loops. The first value is set to the total area. 
+        DH = H[-1] #variation in area between successive loops. The first value is set to the total area. 
         itermax = 0
         if 'Mw' in params:
             s = '\nBaseline substraction for file {}:'.format(i)
